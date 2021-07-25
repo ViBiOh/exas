@@ -13,6 +13,7 @@ VOLUME /tmp
 ARG TARGETOS
 ARG TARGETARCH
 
+USER 405
 WORKDIR /usr/src/app
 COPY exiftool/ .
 
