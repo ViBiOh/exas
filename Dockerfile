@@ -1,4 +1,4 @@
-FROM ruby:alpine
+FROM perl:slim
 
 EXPOSE 1080
 
@@ -13,7 +13,7 @@ VOLUME /tmp
 ARG TARGETOS
 ARG TARGETARCH
 
-USER 405
+USER 65534
 WORKDIR /usr/src/app
 COPY exiftool/ .
 
