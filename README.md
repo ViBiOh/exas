@@ -95,6 +95,8 @@ Usage of exas:
         [alcotest] URL to check {EXAS_URL}
   -userAgent string
         [alcotest] User-Agent for check {EXAS_USER_AGENT} (default "Alcotest")
+  -workDir string
+        [exas] Working directory for GET requests {EXAS_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default "2m")
 ```
