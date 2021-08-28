@@ -2,10 +2,7 @@ package exas
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -70,18 +67,6 @@ func cleanFile(name string) {
 	if err := os.Remove(name); err != nil {
 		logger.Warn("unable to remove file %s: %s", name, err)
 	}
-}
-
-func sha(o interface{}) string {
-	hasher := sha1.New()
-
-	// no err check https://golang.org/pkg/hash/#Hash
-	if _, err := hasher.Write([]byte(fmt.Sprintf("%#v", o))); err != nil {
-		logger.Error("%s", err)
-		return ""
-	}
-
-	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func answerExif(w http.ResponseWriter, filename string) {

@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
-	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha(time.Now())))
+	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
 
 	inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
