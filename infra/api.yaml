@@ -25,6 +25,6 @@ spec:
     nameOverride: exas
     image:
       name: vibioh/exas
-      tag: "202109250744" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tag: "202110020752" # {"$imagepolicy": "default:flux-exas-api:tag"}
     config:
       EXAS_LOGGER_JSON: "true"
