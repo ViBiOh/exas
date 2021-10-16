@@ -61,12 +61,16 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "^1.17"
+      - name: Cache exiftool binaries
+        uses: actions/cache@v2
+        with:
+          path: |
+            exiftool
+          key: exiftoolbinaries
       - name: Build
         run: |
           curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap" | bash -s -- "-c" "release"
-          curl --disable --silent --show-error --location --max-time 30  --output Image-ExifTool-12.29.tar.gz "https://exiftool.org/Image-ExifTool-12.29.tar.gz"
-          tar --extract --gzip --file Image-ExifTool-12.29.tar.gz
-          mv Image-ExifTool-12.29 exiftool
+          ./download_exiftool
           DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release build
       - name: Setup Docker
         uses: docker/setup-buildx-action@v1

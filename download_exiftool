@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
+main() {
+  source "$(script_dir)/scripts/meta" && meta_init "var"
+  var_color
+
+  local TARGET_NAME="exiftool"
+
+  if [[ -e ${TARGET_NAME} ]]; then
+    var_info "File '${TARGET_NAME}' already present, skipping download."
+    return
+  fi
+
+  var_info "Downloading exiftool"
+
+  local EXIF_VERSION="12.32"
+  local EXIF_ARCHIVE_NAME="Image-ExifTool-${EXIF_VERSION}.tar.gz"
+
+  curl --disable --silent --show-error --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "https://exiftool.org/${EXIF_ARCHIVE_NAME}"
+  tar --extract --gzip --file "${EXIF_ARCHIVE_NAME}"
+  rm "${EXIF_ARCHIVE_NAME}"
+  mv "Image-ExifTool-${EXIF_VERSION}" "${TARGET_NAME}"
+}
+
+main "${@}"
