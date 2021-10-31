@@ -16,7 +16,7 @@ import (
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
 
-	inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return

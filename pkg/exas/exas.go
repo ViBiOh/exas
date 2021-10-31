@@ -13,13 +13,11 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
-var (
-	bufferPool = sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 32*1024))
-		},
-	}
-)
+var bufferPool = sync.Pool{
+	New: func() interface{} {
+		return bytes.NewBuffer(make([]byte, 32*1024))
+	},
+}
 
 // App of package
 type App struct {
