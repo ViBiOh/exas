@@ -31,8 +31,5 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.getExif(inputFilename, w); err != nil {
-		httperror.InternalServerError(w, err)
-		return
-	}
+	a.answerExif(inputFilename, w)
 }

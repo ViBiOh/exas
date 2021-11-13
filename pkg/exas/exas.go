@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -14,6 +13,8 @@ import (
 
 	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
+	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
@@ -77,7 +78,7 @@ func cleanFile(name string) {
 	}
 }
 
-func (a App) getExif(input string, output io.Writer) error {
+func (a App) answerExif(input string, w http.ResponseWriter) {
 	cmd := exec.Command("./exiftool", "-json", input)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
@@ -88,12 +89,14 @@ func (a App) getExif(input string, output io.Writer) error {
 	cmd.Stderr = buffer
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err)
+		httperror.InternalServerError(w, fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err))
+		return
 	}
 
 	var exifs []map[string]interface{}
 	if err := json.NewDecoder(buffer).Decode(&exifs); err != nil {
-		return fmt.Errorf("unable to decode exiftool output: %s", err)
+		httperror.InternalServerError(w, fmt.Errorf("unable to decode exiftool output: %s", err))
+		return
 	}
 
 	var exifData map[string]interface{}
@@ -103,13 +106,10 @@ func (a App) getExif(input string, output io.Writer) error {
 
 	if a.geocodeApp.Enabled() {
 		if err := a.geocodeApp.AppendGeocoding(exifData); err != nil {
-			return fmt.Errorf("unable to append geocoding: %s", err)
+			httperror.InternalServerError(w, fmt.Errorf("unable to append geocoding: %s", err))
+			return
 		}
 	}
 
-	if err := json.NewEncoder(output).Encode(exifData); err != nil {
-		return fmt.Errorf("unable to marshal exif data: %s", err)
-	}
-
-	return nil
+	httpjson.Write(w, http.StatusOK, exifData)
 }

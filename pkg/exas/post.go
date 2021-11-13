@@ -1,7 +1,6 @@
 package exas
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,10 +27,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.getExif(inputFilename, w); err != nil {
-		httperror.InternalServerError(w, err)
-		return
-	}
+	a.answerExif(inputFilename, w)
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
@@ -53,9 +49,6 @@ func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
 		}
 	}()
 
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	_, err = io.CopyBuffer(writer, r.Body, buffer.Bytes())
+	_, err = io.Copy(writer, r.Body)
 	return
 }
