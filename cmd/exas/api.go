@@ -7,8 +7,6 @@ import (
 	"github.com/ViBiOh/exas/pkg/exas"
 	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
-	"github.com/ViBiOh/httputils/v4/pkg/amqp"
-	"github.com/ViBiOh/httputils/v4/pkg/amqphandler"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/health"
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
@@ -32,9 +30,6 @@ func main() {
 	exasConfig := exas.Flags(fs, "")
 	geocodeConfig := geocode.Flags(fs, "")
 
-	amqpConfig := amqp.Flags(fs, "amqp")
-	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "exas"), flags.NewOverride("RoutingKey", "geocode"))
-
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
 	alcotest.DoAndExit(alcotestConfig)
@@ -52,22 +47,9 @@ func main() {
 
 	exasApp := exas.New(exasConfig, geocodeApp)
 
-	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
-	if err != nil {
-		logger.Error("unable to create amqp client: %s", err)
-	} else {
-		defer amqpClient.Close()
-	}
-
-	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, exasApp.AmqpHandler)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	go amqphandlerApp.Start(healthApp.Done())
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(exasApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), promServer.Done(), amqphandlerApp.Done())
+	server.GracefulWait(appServer.Done(), promServer.Done())
 }
