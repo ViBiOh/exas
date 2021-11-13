@@ -43,8 +43,22 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of exas:
   -address string
         [server] Listen address {EXAS_ADDRESS}
+  -amqpExchange string
+        [amqp] Exchange name {EXAS_AMQP_EXCHANGE} (default "fibr")
+  -amqpMaxRetry uint
+        [amqp] Max send retries {EXAS_AMQP_MAX_RETRY} (default 3)
+  -amqpQueue string
+        [amqp] Queue name {EXAS_AMQP_QUEUE} (default "exas")
+  -amqpRetryInterval string
+        [amqp] Interval duration when send fails {EXAS_AMQP_RETRY_INTERVAL} (default "1h")
+  -amqpRoutingKey string
+        [amqp] RoutingKey name {EXAS_AMQP_ROUTING_KEY} (default "geocode")
+  -amqpURI string
+        [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {EXAS_AMQP_URI}
   -cert string
         [server] Certificate file {EXAS_CERT}
+  -geocodeURL string
+        [exif] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") {EXAS_GEOCODE_URL}
   -graceDuration string
         [http] Grace duration when SIGTERM received {EXAS_GRACE_DURATION} (default "30s")
   -idleTimeout string
@@ -96,7 +110,7 @@ Usage of exas:
   -userAgent string
         [alcotest] User-Agent for check {EXAS_USER_AGENT} (default "Alcotest")
   -workDir string
-        [exas] Working directory for GET requests {EXAS_WORK_DIR}
+        [vith] Working directory for direct access requests {EXAS_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default "2m")
 ```

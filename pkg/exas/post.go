@@ -14,22 +14,24 @@ import (
 )
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
-	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
-
-	inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	inputFilename := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
+	inputFile, err := os.OpenFile(inputFilename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	defer cleanFile(inputName)
+	defer cleanFile(inputFilename)
 
 	if err := loadFile(inputFile, r); err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	answerExif(w, inputName)
+	if err := a.getExif(inputFilename, w); err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
