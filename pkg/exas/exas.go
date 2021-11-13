@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -72,8 +73,19 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 		return fmt.Errorf("unable to parse payload: %s", err)
 	}
 
-	if err := checkRequest(req); err != nil {
-		return err
+	if strings.Contains(req.Input, "..") {
+		return errors.New("input path with dots is not allowed")
+	}
+
+	if strings.Contains(req.Output, "..") {
+		return errors.New("output path with dots is not allowed")
+	}
+
+	req.Input = filepath.Join(a.workingDir, req.Input)
+	req.Output = filepath.Join(a.workingDir, req.Output)
+
+	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
+		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
 	}
 
 	outputFile, err := os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
@@ -106,22 +118,6 @@ func cleanFile(name string) {
 	if err := os.Remove(name); err != nil {
 		logger.Warn("unable to remove file %s: %s", name, err)
 	}
-}
-
-func checkRequest(req Request) error {
-	if strings.Contains(req.Input, "..") {
-		return errors.New("input path with dots is not allowed")
-	}
-
-	if strings.Contains(req.Output, "..") {
-		return errors.New("output path with dots is not allowed")
-	}
-
-	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
-		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
-	}
-
-	return nil
 }
 
 func (a App) getExif(input string, output io.Writer) error {
