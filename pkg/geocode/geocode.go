@@ -64,7 +64,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer) (App, error)
 
 	return App{
 		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
-		metric:     prom.CounterVec(prometheusRegisterer, "exas", "", "geocode"),
+		metric:     prom.CounterVec(prometheusRegisterer, "exas", "", "geocode", "state"),
 		ticker:     ticker,
 	}, nil
 }
