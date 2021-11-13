@@ -48,6 +48,7 @@ func main() {
 
 	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer())
 	logger.Fatal(err)
+	defer geocodeApp.Close()
 
 	exasApp := exas.New(exasConfig, geocodeApp)
 

@@ -37,7 +37,7 @@ type Geocode struct {
 // App of package
 type App struct {
 	metric     *prometheus.CounterVec
-	ticker     <-chan time.Time
+	ticker     *time.Ticker
 	geocodeReq request.Request
 }
 
@@ -57,9 +57,9 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 func New(config Config, prometheusRegisterer prometheus.Registerer) (App, error) {
 	geocodeURL := strings.TrimSpace(*config.geocodeURL)
 
-	var ticker <-chan time.Time
+	var ticker *time.Ticker
 	if strings.HasPrefix(geocodeURL, publicNominatimURL) {
-		ticker = time.Tick(publicNominatimInterval)
+		ticker = time.NewTicker(publicNominatimInterval)
 	}
 
 	return App{
@@ -74,10 +74,19 @@ func (a App) Enabled() bool {
 	return !a.geocodeReq.IsZero()
 }
 
+// Close closes underlying resources
+func (a App) Close() {
+	if a.ticker == nil {
+		return
+	}
+
+	a.ticker.Stop()
+}
+
 // AppendGeocoding to given exif data
 func (a App) AppendGeocoding(exifData map[string]interface{}) error {
 	if a.ticker != nil {
-		<-a.ticker
+		<-a.ticker.C
 	}
 
 	lat, lon, err := extractCoordinates(exifData)

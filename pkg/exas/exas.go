@@ -138,9 +138,14 @@ func (a App) getExif(input string, output io.Writer) error {
 		return fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err)
 	}
 
+	var exifs []map[string]interface{}
+	if err := json.NewDecoder(buffer).Decode(&exifs); err != nil {
+		return fmt.Errorf("unable to decode exiftool output: %s", err)
+	}
+
 	var exifData map[string]interface{}
-	if err := json.NewDecoder(buffer).Decode(&exifData); err != nil {
-		return fmt.Errorf("unable to decode exif output: %s", err)
+	if len(exifs) > 0 {
+		exifData = exifs[0]
 	}
 
 	if a.geocodeApp.Enabled() {
