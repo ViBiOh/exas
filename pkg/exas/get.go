@@ -28,6 +28,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
 		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename))
+		return
 	}
 
 	if err := a.getExif(inputFilename, w); err != nil {
