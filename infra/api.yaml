@@ -40,3 +40,5 @@ spec:
     securityContext:
       runAsGroup: 995
       runAsUser: 999
+    autoscaling:
+      enabled: false
