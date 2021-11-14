@@ -8,8 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/streadway/amqp"
 )
+
+type amqpResponse struct {
+	Item model.StorageItem `json:"item"`
+	Exif model.Exif        `json:"exif"`
+}
 
 // AmqpHandler for amqp request
 func (a App) AmqpHandler(message amqp.Delivery) error {
@@ -17,13 +23,16 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 		return errors.New("exas has no direct access to filesystem")
 	}
 
-	inputFilename := string(message.Body)
+	var item model.StorageItem
+	if err := json.Unmarshal(message.Body, &item); err != nil {
+		return fmt.Errorf("unable to decode: %s", err)
+	}
 
-	if strings.Contains(inputFilename, "..") {
+	if strings.Contains(item.Pathname, "..") {
 		return errors.New("input path with dots is not allowed")
 	}
 
-	inputFilename = filepath.Join(a.workingDir, inputFilename)
+	inputFilename := filepath.Join(a.workingDir, item.Pathname)
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename)
@@ -34,7 +43,10 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 		return fmt.Errorf("unable to get exif: %s", err)
 	}
 
-	payload, err := json.Marshal(exif)
+	payload, err := json.Marshal(amqpResponse{
+		Item: item,
+		Exif: exif,
+	})
 	if err != nil {
 		return fmt.Errorf("unable to encode: %s", err)
 	}

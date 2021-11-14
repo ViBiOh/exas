@@ -25,3 +25,12 @@ type Exif struct {
 func (e Exif) IsZero() bool {
 	return len(e.Data) == 0
 }
+
+// StorageItem describe item on a storage provider
+type StorageItem struct {
+	Date     time.Time `json:"date"`
+	Name     string    `json:"name"`
+	Pathname string    `json:"pathname"`
+	IsDir    bool      `json:"isDir"`
+	Size     int64     `json:"size"`
+}
