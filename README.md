@@ -98,7 +98,7 @@ Usage of exas:
   -userAgent string
         [alcotest] User-Agent for check {EXAS_USER_AGENT} (default "Alcotest")
   -workDir string
-        [vith] Working directory for direct access requests {EXAS_WORK_DIR}
+        [exas] Working directory for direct access requests {EXAS_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default "2m")
 ```

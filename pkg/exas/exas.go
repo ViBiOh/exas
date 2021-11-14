@@ -41,7 +41,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
 		tmpFolder:  flags.New(prefix, "exas", "TmpFolder").Default("/tmp", overrides).Label("Folder used for temporary files storage").ToString(fs),
-		workingDir: flags.New(prefix, "vith", "WorkDir").Default("", overrides).Label("Working directory for direct access requests").ToString(fs),
+		workingDir: flags.New(prefix, "exas", "WorkDir").Default("", overrides).Label("Working directory for direct access requests").ToString(fs),
 	}
 }
 
@@ -102,6 +102,13 @@ func (a App) answerExif(input string, w http.ResponseWriter) {
 	var exifData map[string]interface{}
 	if len(exifs) > 0 {
 		exifData = exifs[0]
+	}
+
+	if date, err := getDate(exifData); err != nil {
+		httperror.InternalServerError(w, fmt.Errorf("unable to parse date: %s", err))
+		return
+	} else if !date.IsZero() {
+		exifData["date"] = date
 	}
 
 	if a.geocodeApp.Enabled() {
