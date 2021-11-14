@@ -16,9 +16,9 @@ func (g Geocode) IsZero() bool {
 
 // Exif data
 type Exif struct {
+	Data    map[string]interface{} `json:"data"`
 	Date    time.Time              `json:"date"`
 	Geocode Geocode                `json:"geocode"`
-	Data    map[string]interface{} `json:"data"`
 }
 
 // IsZero checks if struct is empty or not

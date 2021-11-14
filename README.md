@@ -57,6 +57,8 @@ Usage of exas:
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {EXAS_AMQP_URI}
   -cert string
         [server] Certificate file {EXAS_CERT}
+  -exchange string
+        [exas] AMQP Exchange Name {EXAS_EXCHANGE} (default "fibr")
   -geocodeURL string
         [exif] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") {EXAS_GEOCODE_URL}
   -graceDuration string
@@ -101,6 +103,8 @@ Usage of exas:
         [prometheus] Write Timeout {EXAS_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
   -readTimeout string
         [server] Read Timeout {EXAS_READ_TIMEOUT} (default "2m")
+  -routingKey string
+        [exas] AMQP Routing Key for fibr {EXAS_ROUTING_KEY} (default "fibr")
   -shutdownTimeout string
         [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
   -tmpFolder string

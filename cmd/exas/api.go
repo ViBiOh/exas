@@ -50,14 +50,14 @@ func main() {
 	logger.Fatal(err)
 	defer geocodeApp.Close()
 
-	exasApp := exas.New(exasConfig, geocodeApp)
-
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
 	if err != nil {
 		logger.Error("unable to create amqp client: %s", err)
 	} else {
 		defer amqpClient.Close()
 	}
+
+	exasApp := exas.New(exasConfig, geocodeApp, amqpClient)
 
 	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, exasApp.AmqpHandler)
 	if err != nil {
