@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/ViBiOh/exas/pkg/model"
 )
 
 var (
@@ -23,9 +25,9 @@ var (
 	}
 )
 
-func getDate(data map[string]interface{}) (time.Time, error) {
+func getDate(exif model.Exif) (time.Time, error) {
 	for _, exifDate := range exifDates {
-		rawCreateDate, ok := data[exifDate]
+		rawCreateDate, ok := exif.Data[exifDate]
 		if !ok {
 			continue
 		}

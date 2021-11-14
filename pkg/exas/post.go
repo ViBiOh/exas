@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
@@ -27,7 +28,13 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.answerExif(inputFilename, w)
+	exif, err := a.get(inputFilename)
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, exif)
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {

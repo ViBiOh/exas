@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
@@ -22,17 +23,10 @@ const (
 	gpsLongitude = "GPSLongitude"
 
 	publicNominatimURL      = "https://nominatim.openstreetmap.org"
-	publicNominatimInterval = time.Second * 2 // nominatim allows 1req/sec, so we take an extra step
+	publicNominatimInterval = time.Second + time.Millisecond*500 // nominatim allows 1req/sec, so we take an extra step
 )
 
 var gpsRegex = regexp.MustCompile(`(?im)([0-9]+)\s*deg\s*([0-9]+)'\s*([0-9]+(?:\.[0-9]+)?)"\s*([N|S|W|E])`)
-
-// Geocode content
-type Geocode struct {
-	Address   map[string]string `json:"address"`
-	Latitude  string            `json:"lat"`
-	Longitude string            `json:"lon"`
-}
 
 // App of package
 type App struct {
@@ -83,34 +77,33 @@ func (a App) Close() {
 	a.ticker.Stop()
 }
 
-// AppendGeocoding to given exif data
-func (a App) AppendGeocoding(exifData map[string]interface{}) error {
+// GetGeocoding of given exif data
+func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
 	if a.ticker != nil {
 		<-a.ticker.C
 	}
 
-	lat, lon, err := extractCoordinates(exifData)
+	var geocode model.Geocode
+
+	lat, lon, err := extractCoordinates(exif.Data)
 	if err != nil {
-		return fmt.Errorf("unable to get gps coordinate: %s", err)
+		return geocode, fmt.Errorf("unable to get gps coordinate: %s", err)
 	}
 
-	var geocode Geocode
 	if len(lat) != 0 && len(lon) != 0 {
-		geocode, err = a.getReverseGeocode(context.Background(), lat, lon)
-		if err != nil {
-			return fmt.Errorf("unable to reverse geocode: %s", err)
+		if geocode, err = a.getReverseGeocode(context.Background(), lat, lon); err != nil {
+			return geocode, fmt.Errorf("unable to reverse geocode: %s", err)
 		}
 	}
 
 	if len(geocode.Address) == 0 {
 		a.increaseMetric("empty")
-		return nil
+		return geocode, nil
 	}
 
 	a.increaseMetric("good")
-	exifData["geocode"] = geocode
 
-	return nil
+	return geocode, nil
 }
 
 func extractCoordinates(data map[string]interface{}) (string, string, error) {
@@ -184,7 +177,7 @@ func convertDegreeMinuteSecondToDecimal(location string) (string, error) {
 	return fmt.Sprintf("%.6f", dd), nil
 }
 
-func (a App) getReverseGeocode(ctx context.Context, lat, lon string) (Geocode, error) {
+func (a App) getReverseGeocode(ctx context.Context, lat, lon string) (model.Geocode, error) {
 	params := url.Values{}
 	params.Add("lat", lat)
 	params.Add("lon", lon)
@@ -193,7 +186,7 @@ func (a App) getReverseGeocode(ctx context.Context, lat, lon string) (Geocode, e
 
 	a.increaseMetric("requested")
 
-	var output Geocode
+	var output model.Geocode
 
 	resp, err := a.geocodeReq.Path(fmt.Sprintf("/reverse?%s", params.Encode())).Send(ctx, nil)
 	if err != nil {

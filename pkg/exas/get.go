@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
 func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
@@ -31,5 +32,11 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.answerExif(inputFilename, w)
+	exif, err := a.get(inputFilename)
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, exif)
 }
