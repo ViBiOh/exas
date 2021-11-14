@@ -37,3 +37,6 @@ spec:
       EXAS_LOGGER_JSON: "true"
       EXAS_WORK_DIR: "/data"
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
+    securityContext:
+      runAsGroup: 995
+      runAsUser: 999

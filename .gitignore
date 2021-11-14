@@ -5,6 +5,7 @@ scripts/
 bin/
 coverage.*
 profile.out
+.env
 
 # third-parties
 exiftool/
