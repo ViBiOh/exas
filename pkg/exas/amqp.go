@@ -13,8 +13,8 @@ import (
 )
 
 type amqpResponse struct {
-	Item model.StorageItem `json:"item"`
 	Exif model.Exif        `json:"exif"`
+	Item model.StorageItem `json:"item"`
 }
 
 // AmqpHandler for amqp request

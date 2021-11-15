@@ -60,7 +60,10 @@ func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client) App {
 		tmpFolder:  strings.TrimSpace(*config.tmpFolder),
 		workingDir: strings.TrimSpace(*config.workingDir),
 		geocodeApp: geocodeApp,
-		amqpClient: amqpClient,
+
+		amqpClient:     amqpClient,
+		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
+		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
 	}
 }
 
