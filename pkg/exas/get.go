@@ -28,15 +28,18 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	inputFilename = filepath.Join(a.workingDir, inputFilename)
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
+		a.increaseMetric("exif", "not_found")
 		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename))
 		return
 	}
 
 	exif, err := a.get(inputFilename)
 	if err != nil {
+		a.increaseMetric("exif", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
+	a.increaseMetric("exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
 }

@@ -16,6 +16,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var bufferPool = sync.Pool{
@@ -27,6 +29,7 @@ var bufferPool = sync.Pool{
 // App of package
 type App struct {
 	amqpClient     *amqp.Client
+	metric         *prometheus.CounterVec
 	tmpFolder      string
 	workingDir     string
 	amqpExchange   string
@@ -55,7 +58,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client) App {
+func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client) App {
 	return App{
 		tmpFolder:  strings.TrimSpace(*config.tmpFolder),
 		workingDir: strings.TrimSpace(*config.workingDir),
@@ -64,6 +67,8 @@ func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client) App {
 		amqpClient:     amqpClient,
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+
+		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "kind", "state"),
 	}
 }
 
@@ -126,8 +131,11 @@ func (a App) get(input string) (model.Exif, error) {
 	}
 
 	if a.geocodeApp.Enabled() {
+		a.increaseMetric("geocode", "request")
+
 		geocode, err := a.geocodeApp.GetGeocoding(exif)
 		if err != nil {
+			a.increaseMetric("geocode", "error")
 			return exif, fmt.Errorf("unable to append geocoding: %s", err)
 		}
 

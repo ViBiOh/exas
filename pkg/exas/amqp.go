@@ -25,6 +25,7 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 
 	var item model.StorageItem
 	if err := json.Unmarshal(message.Body, &item); err != nil {
+		a.increaseMetric("exif", "invalid")
 		return fmt.Errorf("unable to decode: %s", err)
 	}
 
@@ -35,11 +36,13 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 	inputFilename := filepath.Join(a.workingDir, item.Pathname)
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
+		a.increaseMetric("exif", "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename)
 	}
 
 	exif, err := a.get(inputFilename)
 	if err != nil {
+		a.increaseMetric("exif", "error")
 		return fmt.Errorf("unable to get exif: %s", err)
 	}
 
@@ -57,6 +60,8 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 	}, a.amqpExchange, a.amqpRoutingKey); err != nil {
 		return fmt.Errorf("unable to publish amqp message: %s", err)
 	}
+
+	a.increaseMetric("exif", "success")
 
 	return nil
 }

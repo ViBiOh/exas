@@ -24,16 +24,19 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	defer cleanFile(inputFilename)
 
 	if err := loadFile(inputFile, r); err != nil {
+		a.increaseMetric("exif", "load_error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
 	exif, err := a.get(inputFilename)
 	if err != nil {
+		a.increaseMetric("exif", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
+	a.increaseMetric("exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
 }
 
