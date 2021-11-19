@@ -10,26 +10,34 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
-	inputFilename := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
-	inputFile, err := os.OpenFile(inputFilename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
+
+	writer, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	defer cleanFile(inputFilename)
+	defer cleanFile(inputName)
 
-	if err := loadFile(inputFile, r); err != nil {
+	defer func() {
+		if closeErr := writer.Close(); closeErr != nil {
+			logger.WithField("fn", "vith.handlePost").WithField("item", inputName).Error("unable to close: %s", err)
+		}
+	}()
+
+	if err := loadFile(writer, r); err != nil {
 		a.increaseMetric("exif", "load_error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	exif, err := a.get(inputFilename)
+	exif, err := a.get(inputName)
 	if err != nil {
 		a.increaseMetric("exif", "error")
 		httperror.InternalServerError(w, err)
@@ -40,21 +48,13 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, exif)
 }
 
-func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
+func loadFile(writer io.Writer, r *http.Request) (err error) {
 	defer func() {
 		if closeErr := r.Body.Close(); closeErr != nil {
-			if err == nil {
-				err = closeErr
-			} else {
+			if err != nil {
 				err = fmt.Errorf("%s: %w", err, closeErr)
-			}
-		}
-
-		if closeErr := writer.Close(); closeErr != nil {
-			if err == nil {
-				err = closeErr
 			} else {
-				err = fmt.Errorf("%s: %w", err, closeErr)
+				err = fmt.Errorf("unable to close: %s", err)
 			}
 		}
 	}()
