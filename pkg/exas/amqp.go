@@ -46,18 +46,7 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 		return fmt.Errorf("unable to get exif: %s", err)
 	}
 
-	payload, err := json.Marshal(amqpResponse{
-		Item: item,
-		Exif: exif,
-	})
-	if err != nil {
-		return fmt.Errorf("unable to encode: %s", err)
-	}
-
-	if err = a.amqpClient.Publish(amqp.Publishing{
-		ContentType: "application/json",
-		Body:        payload,
-	}, a.amqpExchange, a.amqpRoutingKey); err != nil {
+	if err := a.amqpClient.PublishJSON(amqpResponse{Item: item, Exif: exif}, a.amqpExchange, a.amqpRoutingKey); err != nil {
 		return fmt.Errorf("unable to publish amqp message: %s", err)
 	}
 
