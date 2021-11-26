@@ -45,6 +45,8 @@ Usage of exas:
         [server] Listen address {EXAS_ADDRESS}
   -amqpExchange string
         [amqp] Exchange name {EXAS_AMQP_EXCHANGE} (default "fibr")
+  -amqpExclusive
+        [amqp] Queue exclusive mode (for fanout exchange) {EXAS_AMQP_EXCLUSIVE}
   -amqpMaxRetry uint
         [amqp] Max send retries {EXAS_AMQP_MAX_RETRY} (default 3)
   -amqpQueue string
@@ -104,7 +106,7 @@ Usage of exas:
   -readTimeout string
         [server] Read Timeout {EXAS_READ_TIMEOUT} (default "2m")
   -routingKey string
-        [exas] AMQP Routing Key for fibr {EXAS_ROUTING_KEY} (default "fibr")
+        [exas] AMQP Routing Key for fibr {EXAS_ROUTING_KEY} (default "exif")
   -shutdownTimeout string
         [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
   -tmpFolder string
