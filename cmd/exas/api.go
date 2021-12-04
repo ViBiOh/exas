@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 
@@ -33,7 +34,7 @@ func main() {
 	geocodeConfig := geocode.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
-	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "exas"), flags.NewOverride("RoutingKey", "exif"))
+	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "exas"), flags.NewOverride("RoutingKey", "exif_input"))
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
@@ -51,9 +52,9 @@ func main() {
 	defer geocodeApp.Close()
 
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
-	if err != nil {
+	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		logger.Error("unable to create amqp client: %s", err)
-	} else {
+	} else if amqpClient != nil {
 		defer amqpClient.Close()
 	}
 

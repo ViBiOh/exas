@@ -54,7 +54,7 @@ Usage of exas:
   -amqpRetryInterval string
         [amqp] Interval duration when send fails {EXAS_AMQP_RETRY_INTERVAL} (default "1h")
   -amqpRoutingKey string
-        [amqp] RoutingKey name {EXAS_AMQP_ROUTING_KEY} (default "exif")
+        [amqp] RoutingKey name {EXAS_AMQP_ROUTING_KEY} (default "exif_input")
   -amqpURI string
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {EXAS_AMQP_URI}
   -cert string
@@ -106,7 +106,7 @@ Usage of exas:
   -readTimeout string
         [server] Read Timeout {EXAS_READ_TIMEOUT} (default "2m")
   -routingKey string
-        [exas] AMQP Routing Key for fibr {EXAS_ROUTING_KEY} (default "exif")
+        [exas] AMQP Routing Key to fibr {EXAS_ROUTING_KEY} (default "exif_output")
   -shutdownTimeout string
         [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
   -tmpFolder string

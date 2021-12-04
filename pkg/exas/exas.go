@@ -53,7 +53,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		workingDir: flags.New(prefix, "exas", "WorkDir").Default("", overrides).Label("Working directory for direct access requests").ToString(fs),
 
 		amqpExchange:   flags.New(prefix, "exas", "Exchange").Default("fibr", nil).Label("AMQP Exchange Name").ToString(fs),
-		amqpRoutingKey: flags.New(prefix, "exas", "RoutingKey").Default("exif", nil).Label("AMQP Routing Key for fibr").ToString(fs),
+		amqpRoutingKey: flags.New(prefix, "exas", "RoutingKey").Default("exif_output", nil).Label("AMQP Routing Key to fibr").ToString(fs),
 	}
 }
 
