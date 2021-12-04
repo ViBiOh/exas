@@ -23,10 +23,14 @@ const (
 	gpsLongitude = "GPSLongitude"
 
 	publicNominatimURL      = "https://nominatim.openstreetmap.org"
-	publicNominatimInterval = time.Second + time.Millisecond*500 // nominatim allows 1req/sec, so we take an extra step
+	publicNominatimInterval = time.Second + time.Millisecond*200 // nominatim allows 1req/sec, so we take an extra step
 )
 
 var gpsRegex = regexp.MustCompile(`(?im)([0-9]+)\s*deg\s*([0-9]+)'\s*([0-9]+(?:\.[0-9]+)?)"\s*([N|S|W|E])`)
+
+type reverseGeocodeResponse struct {
+	Address map[string]string `json:"address"`
+}
 
 // App of package
 type App struct {
@@ -187,6 +191,7 @@ func (a App) getReverseGeocode(ctx context.Context, lat, lon float64) (model.Geo
 	a.increaseMetric("requested")
 
 	var output model.Geocode
+	var geocode reverseGeocodeResponse
 
 	resp, err := a.geocodeReq.Path(fmt.Sprintf("/reverse?%s", params.Encode())).Send(ctx, nil)
 	if err != nil {
@@ -194,10 +199,14 @@ func (a App) getReverseGeocode(ctx context.Context, lat, lon float64) (model.Geo
 		return output, fmt.Errorf("unable to get reverse geocoding: %s", err)
 	}
 
-	if err = httpjson.Read(resp, &output); err != nil {
+	if err = httpjson.Read(resp, &geocode); err != nil {
 		a.increaseMetric("decode_error")
 		return output, fmt.Errorf("unable to decode reverse geocoding: %s", err)
 	}
+
+	output.Longitude = lon
+	output.Latitude = lat
+	output.Address = geocode.Address
 
 	return output, nil
 }
