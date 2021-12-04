@@ -37,7 +37,7 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
 		a.increaseMetric("exif", "not_found")
-		return fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename)
+		return fmt.Errorf("input `%s` doesn't exist or is a directory", item.Pathname)
 	}
 
 	exif, err := a.get(inputFilename)
