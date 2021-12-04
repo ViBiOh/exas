@@ -2,9 +2,12 @@ package geocode
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"testing"
 )
+
+const float64EqualityThreshold = 0.000001
 
 func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 	type args struct {
@@ -14,7 +17,7 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 	cases := []struct {
 		intention string
 		args      args
-		want      string
+		want      float64
 		wantErr   error
 	}{
 		{
@@ -22,7 +25,7 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 			args{
 				location: "",
 			},
-			"",
+			0,
 			errors.New("unable to parse GPS data"),
 		},
 		{
@@ -30,7 +33,7 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 			args{
 				location: "1 deg 2' 3\" N",
 			},
-			"1.034167",
+			1.034167,
 			nil,
 		},
 		{
@@ -38,7 +41,7 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 			args{
 				location: "1 deg 2' 3\" W",
 			},
-			"-1.034167",
+			-1.034167,
 			nil,
 		},
 	}
@@ -55,12 +58,12 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 				failed = true
 			} else if tc.wantErr != nil && !strings.Contains(gotErr.Error(), tc.wantErr.Error()) {
 				failed = true
-			} else if got != tc.want {
+			} else if math.Abs(got-tc.want) > float64EqualityThreshold {
 				failed = true
 			}
 
 			if failed {
-				t.Errorf("convertDegreeMinuteSecondToDecimal() = (`%s`, `%s`), want (`%s`, `%s`)", got, gotErr, tc.want, tc.wantErr)
+				t.Errorf("convertDegreeMinuteSecondToDecimal() = (%f, `%s`), want (%f, `%s`)", got, gotErr, tc.want, tc.wantErr)
 			}
 		})
 	}

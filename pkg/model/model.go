@@ -4,9 +4,9 @@ import "time"
 
 // Geocode data
 type Geocode struct {
-	Address   map[string]string `json:"address"`
-	Latitude  string            `json:"lat"`
-	Longitude string            `json:"lon"`
+	Address   map[string]string `json:"address,omitempty"`
+	Latitude  float64           `json:"lat,omitempty"`
+	Longitude float64           `json:"lon,omitempty"`
 }
 
 // IsZero checks if struct is empty or not
@@ -16,9 +16,9 @@ func (g Geocode) IsZero() bool {
 
 // Exif data
 type Exif struct {
-	Data    map[string]interface{} `json:"data"`
-	Date    time.Time              `json:"date"`
-	Geocode Geocode                `json:"geocode"`
+	Data    map[string]interface{} `json:"data,omitempty"`
+	Date    time.Time              `json:"date,omitempty"`
+	Geocode Geocode                `json:"geocode,omitempty"`
 }
 
 // IsZero checks if struct is empty or not

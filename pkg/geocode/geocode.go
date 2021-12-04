@@ -90,7 +90,7 @@ func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
 		return geocode, fmt.Errorf("unable to get gps coordinate: %s", err)
 	}
 
-	if len(lat) != 0 && len(lon) != 0 {
+	if lat != 0 && lon != 0 {
 		if geocode, err = a.getReverseGeocode(context.Background(), lat, lon); err != nil {
 			return geocode, fmt.Errorf("unable to reverse geocode: %s", err)
 		}
@@ -106,81 +106,81 @@ func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
 	return geocode, nil
 }
 
-func extractCoordinates(data map[string]interface{}) (string, string, error) {
+func extractCoordinates(data map[string]interface{}) (float64, float64, error) {
 	lat, err := getCoordinate(data, gpsLatitude)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to parse latitude: %s", err)
+		return 0, 0, fmt.Errorf("unable to parse latitude: %s", err)
 	}
 
-	if len(lat) == 0 {
-		return "", "", nil
+	if lat == 0 {
+		return 0, 0, nil
 	}
 
 	lon, err := getCoordinate(data, gpsLongitude)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to parse longitude: %s", err)
+		return 0, 0, fmt.Errorf("unable to parse longitude: %s", err)
 	}
 
 	return lat, lon, nil
 }
 
-func getCoordinate(data map[string]interface{}, key string) (string, error) {
+func getCoordinate(data map[string]interface{}, key string) (float64, error) {
 	rawCoordinate, ok := data[key]
 	if !ok {
-		return "", nil
+		return 0, nil
 	}
 
 	coordinateStr, ok := rawCoordinate.(string)
 	if !ok {
-		return "", fmt.Errorf("key `%s` is not a string", key)
+		return 0, fmt.Errorf("key `%s` is not a string", key)
 	}
 
 	coordinate, err := convertDegreeMinuteSecondToDecimal(coordinateStr)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse `%s` with value `%s`: %s", key, coordinateStr, err)
+		return 0, fmt.Errorf("unable to parse `%s` with value `%s`: %s", key, coordinateStr, err)
 	}
 
 	return coordinate, nil
 }
 
-func convertDegreeMinuteSecondToDecimal(location string) (string, error) {
+func convertDegreeMinuteSecondToDecimal(location string) (float64, error) {
 	matches := gpsRegex.FindAllStringSubmatch(location, -1)
 	if len(matches) == 0 {
-		return "", fmt.Errorf("unable to parse GPS data `%s`", location)
+		return 0, fmt.Errorf("unable to parse GPS data `%s`", location)
 	}
 
 	match := matches[0]
 
 	degrees, err := strconv.ParseFloat(match[1], 32)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse GPS degrees: %s", err)
+		return 0, fmt.Errorf("unable to parse GPS degrees: %s", err)
 	}
 
 	minutes, err := strconv.ParseFloat(match[2], 32)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse GPS minutes: %s", err)
+		return 0, fmt.Errorf("unable to parse GPS minutes: %s", err)
 	}
 
 	seconds, err := strconv.ParseFloat(match[3], 32)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse GPS seconds: %s", err)
+		return 0, fmt.Errorf("unable to parse GPS seconds: %s", err)
 	}
 
 	direction := match[4]
 
-	dd := degrees + minutes/60.0 + seconds/3600.0
+	dd := degrees + minutes/60 + seconds/3600
 
 	if direction == "S" || direction == "W" {
 		dd *= -1
 	}
 
-	return fmt.Sprintf("%.6f", dd), nil
+	return dd, nil
 }
 
-func (a App) getReverseGeocode(ctx context.Context, lat, lon string) (model.Geocode, error) {
+func (a App) getReverseGeocode(ctx context.Context, lat, lon float64) (model.Geocode, error) {
 	params := url.Values{}
-	params.Add("lat", lat)
-	params.Add("lon", lon)
+	params.Add("lat", fmt.Sprintf("%.6f", lat))
+	params.Add("lon", fmt.Sprintf("%.6f", lon))
 	params.Add("format", "json")
 	params.Add("zoom", "18")
 
