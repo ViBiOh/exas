@@ -20,6 +20,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	writer, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "exif", "not_found")
 		return
 	}
 
@@ -32,19 +33,19 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := loadFile(writer, r); err != nil {
-		a.increaseMetric("exif", "load_error")
 		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "exif", "load_error")
 		return
 	}
 
 	exif, err := a.get(inputName)
 	if err != nil {
-		a.increaseMetric("exif", "error")
+		a.increaseMetric("http", "exif", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	a.increaseMetric("exif", "success")
+	a.increaseMetric("http", "exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
 }
 

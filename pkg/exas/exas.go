@@ -68,7 +68,7 @@ func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
 
-		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "kind", "state"),
+		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "source", "kind", "state"),
 	}
 }
 
@@ -131,11 +131,8 @@ func (a App) get(input string) (model.Exif, error) {
 	}
 
 	if a.geocodeApp.Enabled() {
-		a.increaseMetric("geocode", "request")
-
 		geocode, err := a.geocodeApp.GetGeocoding(exif)
 		if err != nil {
-			a.increaseMetric("geocode", "error")
 			return exif, fmt.Errorf("unable to append geocoding: %s", err)
 		}
 

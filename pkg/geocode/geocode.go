@@ -105,7 +105,7 @@ func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
 		return geocode, nil
 	}
 
-	a.increaseMetric("good")
+	a.increaseMetric("success")
 
 	return geocode, nil
 }
@@ -216,7 +216,5 @@ func (a App) increaseMetric(state string) {
 		return
 	}
 
-	a.metric.With(prometheus.Labels{
-		"state": state,
-	}).Inc()
+	a.metric.WithLabelValues(state).Inc()
 }

@@ -21,6 +21,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	inputFilename := r.URL.Path
 
 	if strings.Contains(inputFilename, "..") {
+		a.increaseMetric("http", "exif", "invalid_path")
 		httperror.BadRequest(w, errors.New("input path with dots is not allowed"))
 		return
 	}
@@ -28,18 +29,18 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	inputFilename = filepath.Join(a.workingDir, inputFilename)
 
 	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
-		a.increaseMetric("exif", "not_found")
+		a.increaseMetric("http", "exif", "not_found")
 		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename))
 		return
 	}
 
 	exif, err := a.get(inputFilename)
 	if err != nil {
-		a.increaseMetric("exif", "error")
 		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "exif", "error")
 		return
 	}
 
-	a.increaseMetric("exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
+	a.increaseMetric("http", "exif", "success")
 }
