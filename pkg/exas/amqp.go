@@ -28,26 +28,7 @@ var (
 
 // AmqpHandler for amqp request
 func (a App) AmqpHandler(message amqp.Delivery) (err error) {
-	defer func() {
-		if err == nil {
-			a.increaseMetric("amqp", "exif", "success")
-			return
-		}
-
-		if errors.Is(err, errNoAccess) {
-			a.increaseMetric("amqp", "exif", "no_access")
-		} else if errors.Is(err, errUnmarshal) {
-			a.increaseMetric("amqp", "exif", "unmarshal_error")
-		} else if errors.Is(err, errInvalidPath) {
-			a.increaseMetric("amqp", "exif", "invalid_path")
-		} else if errors.Is(err, errNotFound) {
-			a.increaseMetric("amqp", "exif", "not_found")
-		} else if errors.Is(err, errExtract) {
-			a.increaseMetric("amqp", "exif", "error")
-		} else if errors.Is(err, errPublish) {
-			a.increaseMetric("amqp", "exif", "publish_error")
-		}
-	}()
+	defer a.handleMetric("amqp", "exif", err)
 
 	if !a.hasDirectAccess() {
 		return errNoAccess
