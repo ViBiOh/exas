@@ -109,14 +109,22 @@ Usage of exas:
         [exas] AMQP Routing Key to fibr {EXAS_ROUTING_KEY} (default "exif_output")
   -shutdownTimeout string
         [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
-  -tmpFolder string
-        [exas] Folder used for temporary files storage {EXAS_TMP_FOLDER} (default "/tmp")
+  -storageAccessKey string
+        [storage] Storage Object Access Key {EXAS_STORAGE_ACCESS_KEY}
+  -storageBucket string
+        [storage] Storage Object Bucket {EXAS_STORAGE_BUCKET}
+  -storageDirectory string
+        [storage] Path to directory {EXAS_STORAGE_DIRECTORY}
+  -storageEndpoint string
+        [storage] Storage Object endpoint {EXAS_STORAGE_ENDPOINT}
+  -storageSSL
+        [storage] Use SSL {EXAS_STORAGE_SSL} (default true)
+  -storageSecretAccess string
+        [storage] Storage Object Secret Access {EXAS_STORAGE_SECRET_ACCESS}
   -url string
         [alcotest] URL to check {EXAS_URL}
   -userAgent string
         [alcotest] User-Agent for check {EXAS_USER_AGENT} (default "Alcotest")
-  -workDir string
-        [exas] Working directory for direct access requests {EXAS_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default "2m")
 ```

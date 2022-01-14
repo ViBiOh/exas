@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/ViBiOh/absto/pkg/absto"
 	"github.com/ViBiOh/exas/pkg/exas"
 	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
@@ -31,6 +32,7 @@ func main() {
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
 
 	exasConfig := exas.Flags(fs, "")
+	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("Directory", ""))
 	geocodeConfig := geocode.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
@@ -47,6 +49,9 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
+	storageProvider, err := absto.New(abstoConfig)
+	logger.Fatal(err)
+
 	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer())
 	logger.Fatal(err)
 	defer geocodeApp.Close()
@@ -58,7 +63,7 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient)
+	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient, storageProvider)
 
 	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, exasApp.AmqpHandler)
 	if err != nil {

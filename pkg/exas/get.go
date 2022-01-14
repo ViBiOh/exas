@@ -1,40 +1,27 @@
 package exas
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
 func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	inputFilename := r.URL.Path
-
-	if strings.Contains(inputFilename, "..") {
-		a.increaseMetric("http", "exif", "invalid_path")
-		httperror.BadRequest(w, errors.New("input path with dots is not allowed"))
+	reader, err := a.storageApp.ReaderFrom(r.URL.Path)
+	if err != nil {
+		httperror.InternalServerError(w, fmt.Errorf("unable to read from storage: %s", err))
 		return
 	}
+	defer closeWithLog(reader, "AmqpHandler", r.URL.Path)
 
-	inputFilename = filepath.Join(a.workingDir, inputFilename)
-
-	if info, err := os.Stat(inputFilename); err != nil || info.IsDir() {
-		a.increaseMetric("http", "exif", "not_found")
-		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputFilename))
-		return
-	}
-
-	exif, err := a.get(inputFilename)
+	exif, err := a.get(reader)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		a.increaseMetric("http", "exif", "error")

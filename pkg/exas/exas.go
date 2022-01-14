@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
 
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -28,10 +28,9 @@ var bufferPool = sync.Pool{
 
 // App of package
 type App struct {
+	storageApp     absto.Storage
 	amqpClient     *amqp.Client
 	metric         *prometheus.CounterVec
-	tmpFolder      string
-	workingDir     string
 	amqpExchange   string
 	amqpRoutingKey string
 	geocodeApp     geocode.App
@@ -39,9 +38,6 @@ type App struct {
 
 // Config of package
 type Config struct {
-	tmpFolder  *string
-	workingDir *string
-
 	amqpExchange   *string
 	amqpRoutingKey *string
 }
@@ -49,21 +45,16 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder:  flags.New(prefix, "exas", "TmpFolder").Default("/tmp", overrides).Label("Folder used for temporary files storage").ToString(fs),
-		workingDir: flags.New(prefix, "exas", "WorkDir").Default("", overrides).Label("Working directory for direct access requests").ToString(fs),
-
 		amqpExchange:   flags.New(prefix, "exas", "Exchange").Default("fibr", nil).Label("AMQP Exchange Name").ToString(fs),
 		amqpRoutingKey: flags.New(prefix, "exas", "RoutingKey").Default("exif_output", nil).Label("AMQP Routing Key to fibr").ToString(fs),
 	}
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client) App {
+func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage) App {
 	return App{
-		tmpFolder:  strings.TrimSpace(*config.tmpFolder),
-		workingDir: strings.TrimSpace(*config.workingDir),
-		geocodeApp: geocodeApp,
-
+		geocodeApp:     geocodeApp,
+		storageApp:     storageApp,
 		amqpClient:     amqpClient,
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
@@ -86,23 +77,14 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func (a App) hasDirectAccess() bool {
-	return len(a.workingDir) != 0
-}
-
-func cleanFile(name string) {
-	if err := os.Remove(name); err != nil {
-		logger.Warn("unable to remove file %s: %s", name, err)
-	}
-}
-
-func (a App) get(input string) (model.Exif, error) {
-	cmd := exec.Command("./exiftool", "-json", input)
+func (a App) get(input io.Reader) (model.Exif, error) {
+	cmd := exec.Command("./exiftool", "-json", "-")
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
+	cmd.Stdin = input
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 

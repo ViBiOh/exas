@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/streadway/amqp"
 )
 
 type amqpResponse struct {
-	Exif model.Exif        `json:"exif"`
-	Item model.StorageItem `json:"item"`
+	Exif model.Exif `json:"exif"`
+	Item absto.Item `json:"item"`
 }
 
 var (
@@ -30,28 +28,23 @@ var (
 func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 	defer a.handleMetric("amqp", "exif", err)
 
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		return errNoAccess
 	}
 
-	var item model.StorageItem
+	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
 		return fmt.Errorf("unable to decode: %s: %w", err, errUnmarshal)
 	}
 
-	if strings.Contains(item.Pathname, "..") {
-		return fmt.Errorf("input path with dots is not allowed: %s", errInvalidPath)
+	reader, err := a.storageApp.ReaderFrom(item.Pathname)
+	if err != nil {
+		return fmt.Errorf("unable to read from storage: %s", err)
 	}
-
-	inputFilename := filepath.Join(a.workingDir, item.Pathname)
-
-	var info os.FileInfo
-	if info, err = os.Stat(inputFilename); err != nil || info.IsDir() {
-		return fmt.Errorf("cannot status input `%s` or is a directory: %s", item.Pathname, errNotFound)
-	}
+	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
 
 	var exif model.Exif
-	exif, err = a.get(inputFilename)
+	exif, err = a.get(reader)
 	if err != nil {
 		return fmt.Errorf("unable to get exif: %s: %w", err, errExtract)
 	}
