@@ -37,7 +37,7 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 		return fmt.Errorf("unable to decode: %s: %w", err, errUnmarshal)
 	}
 
-	reader, err := a.storageApp.ReaderFrom(item.Pathname)
+	reader, err := a.storageApp.ReadFrom(item.Pathname)
 	if err != nil {
 		return fmt.Errorf("unable to read from storage: %s", err)
 	}
