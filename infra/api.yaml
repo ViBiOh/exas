@@ -44,7 +44,7 @@ spec:
         key: node-role.kubernetes.io/storage
         operator: Exists
     securityContext:
-      runAsGroup: 995
-      runAsUser: 999
+      runAsGroup: 1000
+      runAsUser: 1000
     autoscaling:
       enabled: false
