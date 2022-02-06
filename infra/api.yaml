@@ -27,12 +27,12 @@ spec:
       name: vibioh/exas
       tag: "202202050928" # {"$imagepolicy": "default:flux-exas-api:tag"}
     volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: exas
+      - name: data
+        persistentVolumeClaim:
+          claimName: exas
     volumeMounts:
-    - name: data
-      mountPath: /data
+      - name: data
+        mountPath: /data
     config:
       EXAS_LOGGER_JSON: "true"
       EXAS_STORAGE_DIRECTORY: "/data"
@@ -40,9 +40,9 @@ spec:
     secrets:
       EXAS_AMQP_URI: AgCf+iTOMFT4Czw76GTj7dra0DVFsoJScPdEhTLFjou6RBI9LfHYO5k1rVHTd31Ebe6EVnWUAYrHP5kWmb7fkmoYY9NqrK0nnHJRc8TkhOAsmGXTKJjB56KgJs6kjFiKM/cY9NSDu+esl/LGS7P2T51gOpzhtubHxXVuJe73j/Oq+PPOQkhd9LCMctIQfVYyBLOkR8k5Z1FW39AKqBSjl1n/L8GZCi+WOtJ5DNbweIQ6k30MChoW83iCwI5xJ/M8fJiedQ1zckWek/h1LT+c3+TgMdRNW5l0DkwE13SCNFE4CM507ayqoPs603HKNNYAuxyRmdlJmCeFAm/Nxvu8/nbL0caIIuiMw31sTAF6VTk6UR8Wk/9w/HT7ZqRVRYqqVqfRXIkDdlPdTMmCEfntqF0IMnHb5mxoCI5DFTLfSpx3Td3ecLUw8CLHtjEIEy4QdMZWtXGr3v1IxckpCLm4VqvT1lcK8ph5ho72BAkLfQWJcEeYQj66PmlQviJnzbJ06uSbbRcU14NGD/ywQnXBbbVmwEJWwd5mUJmnJwT21ZWD4BOkz1IBkKcQwQWvQvv8prXv7VOppccPpbUnngEwNcvVzV1D1XgpjXSkIJbNBDQmV5ArQgKMFzH7uQFQ1/mGiG1rEKP1w4+Gz9W2X+cS8eBAOj/CYNcCake6w7gFm9PtPH62d42Xz39u8lfaa1JkYcBnAkrKROut+jCHz6XgN7vp0A7ntLueyWNxVUmsw4yE+Fiu2yT9eN7ARnI/W53ZEfWufw0=
     tolerations:
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/storage
-      operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/storage
+        operator: Exists
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
