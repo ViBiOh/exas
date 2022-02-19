@@ -49,6 +49,8 @@ Usage of exas:
         [amqp] Queue exclusive mode (for fanout exchange) {EXAS_AMQP_EXCLUSIVE}
   -amqpMaxRetry uint
         [amqp] Max send retries {EXAS_AMQP_MAX_RETRY} (default 3)
+  -amqpPrefetch int
+        [amqp] Prefetch count for QoS {EXAS_AMQP_PREFETCH} (default 1)
   -amqpQueue string
         [amqp] Queue name {EXAS_AMQP_QUEUE} (default "exas")
   -amqpRetryInterval string
@@ -121,6 +123,10 @@ Usage of exas:
         [storage] Use SSL {EXAS_STORAGE_SSL} (default true)
   -storageSecretAccess string
         [storage] Storage Object Secret Access {EXAS_STORAGE_SECRET_ACCESS}
+  -tracerRate string
+        [tracer] Jaeger sample rate, 'always', 'never' or a float value {EXAS_TRACER_RATE} (default "always")
+  -tracerURL string
+        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {EXAS_TRACER_URL}
   -url string
         [alcotest] URL to check {EXAS_URL}
   -userAgent string
