@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "net/http/pprof"
+
 	"github.com/ViBiOh/absto/pkg/absto"
 	"github.com/ViBiOh/exas/pkg/exas"
 	"github.com/ViBiOh/exas/pkg/geocode"
