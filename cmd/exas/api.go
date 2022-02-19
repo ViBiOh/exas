@@ -68,7 +68,7 @@ func main() {
 	storageProvider, err := absto.New(abstoConfig)
 	logger.Fatal(err)
 
-	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer())
+	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer(), tracerApp)
 	logger.Fatal(err)
 	defer geocodeApp.Close()
 
@@ -79,7 +79,7 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient, storageProvider)
+	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient, storageProvider, tracerApp)
 
 	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, exasApp.AmqpHandler)
 	if err != nil {

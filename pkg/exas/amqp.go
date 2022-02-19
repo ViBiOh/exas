@@ -1,6 +1,7 @@
 package exas
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type amqpResponse struct {
@@ -32,6 +34,14 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 		return errNoAccess
 	}
 
+	ctx := context.Background()
+
+	if a.tracer != nil {
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "amqp")
+		defer span.End()
+	}
+
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
 		return fmt.Errorf("unable to decode: %s: %w", err, errUnmarshal)
@@ -44,7 +54,7 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
 
 	var exif model.Exif
-	exif, err = a.get(reader)
+	exif, err = a.get(ctx, reader)
 	if err != nil {
 		return fmt.Errorf("unable to get exif: %s: %w", err, errExtract)
 	}

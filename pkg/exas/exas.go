@@ -2,6 +2,7 @@ package exas
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -17,7 +18,9 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var bufferPool = sync.Pool{
@@ -29,6 +32,7 @@ var bufferPool = sync.Pool{
 // App of package
 type App struct {
 	storageApp     absto.Storage
+	tracer         trace.Tracer
 	amqpClient     *amqp.Client
 	metric         *prometheus.CounterVec
 	amqpExchange   string
@@ -51,13 +55,14 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage) App {
+func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracerApp tracer.App) App {
 	return App{
 		geocodeApp:     geocodeApp,
 		storageApp:     storageApp,
 		amqpClient:     amqpClient,
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+		tracer:         tracerApp.GetTracer("exas"),
 
 		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "source", "kind", "state"),
 	}
@@ -77,7 +82,13 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func (a App) get(input io.Reader) (model.Exif, error) {
+func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
+	if a.tracer != nil {
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "exiftool")
+		defer span.End()
+	}
+
 	cmd := exec.Command("./exiftool", "-json", "-")
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
@@ -113,7 +124,7 @@ func (a App) get(input io.Reader) (model.Exif, error) {
 	}
 
 	if a.geocodeApp.Enabled() {
-		geocode, err := a.geocodeApp.GetGeocoding(exif)
+		geocode, err := a.geocodeApp.GetGeocoding(ctx, exif)
 		if err != nil {
 			return exif, fmt.Errorf("unable to append geocoding: %s", err)
 		}

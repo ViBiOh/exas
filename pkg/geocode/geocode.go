@@ -15,7 +15,9 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -36,6 +38,7 @@ type reverseGeocodeResponse struct {
 type App struct {
 	metric     *prometheus.CounterVec
 	ticker     *time.Ticker
+	tracer     trace.Tracer
 	geocodeReq request.Request
 }
 
@@ -52,7 +55,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer) (App, error) {
+func New(config Config, prometheusRegisterer prometheus.Registerer, tracerApp tracer.App) (App, error) {
 	geocodeURL := strings.TrimSpace(*config.geocodeURL)
 
 	var ticker *time.Ticker
@@ -63,6 +66,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer) (App, error)
 	return App{
 		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
 		metric:     prom.CounterVec(prometheusRegisterer, "exas", "", "geocode", "state"),
+		tracer:     tracerApp.GetTracer("geocode"),
 		ticker:     ticker,
 	}, nil
 }
@@ -82,9 +86,15 @@ func (a App) Close() {
 }
 
 // GetGeocoding of given exif data
-func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
+func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (model.Geocode, error) {
 	if a.ticker != nil {
 		<-a.ticker.C
+	}
+
+	if a.tracer != nil {
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "geocode")
+		defer span.End()
 	}
 
 	var geocode model.Geocode
@@ -95,7 +105,7 @@ func (a App) GetGeocoding(exif model.Exif) (model.Geocode, error) {
 	}
 
 	if lat != 0 && lon != 0 {
-		if geocode, err = a.getReverseGeocode(context.Background(), lat, lon); err != nil {
+		if geocode, err = a.getReverseGeocode(ctx, lat, lon); err != nil {
 			return geocode, fmt.Errorf("unable to reverse geocode: %s", err)
 		}
 	}

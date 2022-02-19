@@ -8,6 +8,7 @@ require (
 	github.com/ViBiOh/httputils/v4 v4.36.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/streadway/amqp v1.0.0
+	go.opentelemetry.io/otel/trace v1.4.1
 )
 
 require (
@@ -40,7 +41,6 @@ require (
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.4.1 // indirect
-	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect

@@ -21,7 +21,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 	defer closeWithLog(reader, "AmqpHandler", r.URL.Path)
 
-	exif, err := a.get(reader)
+	exif, err := a.get(r.Context(), reader)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		a.increaseMetric("http", "exif", "error")
