@@ -116,12 +116,7 @@ func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
 	}
 
 	exif.Data = exifData
-
-	if date, err := getDate(exif); err != nil {
-		return exif, fmt.Errorf("unable to parse date: %s", err)
-	} else if !date.IsZero() {
-		exif.Date = date
-	}
+	exif.Date = getDate(exif)
 
 	if a.geocodeApp.Enabled() {
 		geocode, err := a.geocodeApp.GetGeocoding(ctx, exif)
