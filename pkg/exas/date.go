@@ -2,7 +2,6 @@ package exas
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ViBiOh/exas/pkg/model"
@@ -11,6 +10,7 @@ import (
 var (
 	exifDates = []string{
 		"GPSDateTime",
+		"SubSecCreateDate",
 		"CreateDate",
 		"DateCreated",
 	}
@@ -23,30 +23,25 @@ var (
 )
 
 func getDate(exif model.Exif) (time.Time, error) {
+	var dates []string
+
 	for _, exifDate := range exifDates {
-		rawCreateDate, ok := exif.Data[exifDate]
+		rawDate, ok := exif.Data[exifDate]
 		if !ok {
 			continue
 		}
 
-		createDateStr, ok := rawCreateDate.(string)
-		if !ok {
-			return time.Time{}, fmt.Errorf("key `%s` is not a string", exifDate)
-		}
-
-		if createDate, err := parseDate(createDateStr); err == nil {
-			return createDate, nil
+		date, ok := rawDate.(string)
+		if ok {
+			dates = append(dates, date)
 		}
 	}
 
-	return time.Time{}, nil
-}
-
-func parseDate(raw string) (time.Time, error) {
 	for _, pattern := range datePatterns {
-		createDate, err := time.Parse(pattern, raw)
-		if err == nil {
-			return createDate, nil
+		for _, date := range dates {
+			if createDate, err := time.Parse(pattern, date); err == nil {
+				return createDate, nil
+			}
 		}
 	}
 
