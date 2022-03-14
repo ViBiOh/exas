@@ -111,18 +111,18 @@ Usage of exas:
         [exas] AMQP Routing Key to fibr {EXAS_ROUTING_KEY} (default "exif_output")
   -shutdownTimeout string
         [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
-  -storageAccessKey string
-        [storage] Storage Object Access Key {EXAS_STORAGE_ACCESS_KEY}
-  -storageBucket string
-        [storage] Storage Object Bucket {EXAS_STORAGE_BUCKET}
-  -storageDirectory string
-        [storage] Path to directory {EXAS_STORAGE_DIRECTORY}
-  -storageEndpoint string
-        [storage] Storage Object endpoint {EXAS_STORAGE_ENDPOINT}
-  -storageSSL
-        [storage] Use SSL {EXAS_STORAGE_SSL} (default true)
-  -storageSecretAccess string
-        [storage] Storage Object Secret Access {EXAS_STORAGE_SECRET_ACCESS}
+  -storageFileSystemDirectory /data
+        [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. {EXAS_STORAGE_FILE_SYSTEM_DIRECTORY}
+  -storageObjectAccessKey string
+        [storage] Storage Object Access Key {EXAS_STORAGE_OBJECT_ACCESS_KEY}
+  -storageObjectBucket string
+        [storage] Storage Object Bucket {EXAS_STORAGE_OBJECT_BUCKET}
+  -storageObjectEndpoint string
+        [storage] Storage Object endpoint {EXAS_STORAGE_OBJECT_ENDPOINT}
+  -storageObjectSSL
+        [storage] Use SSL {EXAS_STORAGE_OBJECT_SSL} (default true)
+  -storageObjectSecretAccess string
+        [storage] Storage Object Secret Access {EXAS_STORAGE_OBJECT_SECRET_ACCESS}
   -tracerRate string
         [tracer] Jaeger sample rate, 'always', 'never' or a float value {EXAS_TRACER_RATE} (default "always")
   -tracerURL string

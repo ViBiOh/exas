@@ -39,7 +39,7 @@ func main() {
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
 
 	exasConfig := exas.Flags(fs, "")
-	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("Directory", ""))
+	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", ""))
 	geocodeConfig := geocode.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
