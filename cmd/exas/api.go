@@ -65,7 +65,7 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig)
+	storageProvider, err := absto.New(abstoConfig, tracerApp.GetTracer("storage"))
 	logger.Fatal(err)
 
 	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer(), tracerApp)
