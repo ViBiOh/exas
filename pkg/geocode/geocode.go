@@ -120,7 +120,7 @@ func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (model.Geocode, 
 	return geocode, nil
 }
 
-func extractCoordinates(data map[string]interface{}) (float64, float64, error) {
+func extractCoordinates(data map[string]any) (float64, float64, error) {
 	lat, err := getCoordinate(data, gpsLatitude)
 	if err != nil {
 		return 0, 0, fmt.Errorf("unable to parse latitude: %s", err)
@@ -138,7 +138,7 @@ func extractCoordinates(data map[string]interface{}) (float64, float64, error) {
 	return lat, lon, nil
 }
 
-func getCoordinate(data map[string]interface{}, key string) (float64, error) {
+func getCoordinate(data map[string]any, key string) (float64, error) {
 	rawCoordinate, ok := data[key]
 	if !ok {
 		return 0, nil

@@ -24,7 +24,7 @@ import (
 )
 
 var bufferPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return bytes.NewBuffer(make([]byte, 32*1024))
 	},
 }
@@ -105,12 +105,12 @@ func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
 		return exif, fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err)
 	}
 
-	var exifs []map[string]interface{}
+	var exifs []map[string]any
 	if err := json.NewDecoder(buffer).Decode(&exifs); err != nil {
 		return exif, fmt.Errorf("unable to decode exiftool output: %s", err)
 	}
 
-	var exifData map[string]interface{}
+	var exifData map[string]any
 	if len(exifs) > 0 {
 		exifData = exifs[0]
 	}
