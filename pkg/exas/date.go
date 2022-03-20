@@ -11,9 +11,10 @@ var (
 
 	exifDates = []string{
 		"GPSDateTime",
+		"DateCreated",
+		"DateTimeOriginal",
 		"SubSecCreateDate",
 		"CreateDate",
-		"DateCreated",
 	}
 
 	tzPattern = "2006:01:02 15:04:05Z07:00"
