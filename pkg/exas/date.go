@@ -11,9 +11,10 @@ var (
 
 	exifDates = []string{
 		"GPSDateTime",
+		"SubSecDateTimeOriginal",
+		"SubSecCreateDate",
 		"DateCreated",
 		"DateTimeOriginal",
-		"SubSecCreateDate",
 		"CreateDate",
 	}
 
@@ -50,14 +51,14 @@ func getDate(exif model.Exif) time.Time {
 }
 
 func parseDateWithTimezone(exif model.Exif, dates []string) time.Time {
-	offsetTime := getExifString(exif, offsetTimeName)
-
 	for _, date := range dates {
 		if createDate, err := time.Parse(tzPattern, date); err == nil {
 			return createDate
 		}
+	}
 
-		if len(offsetTime) > 0 {
+	if offsetTime := getExifString(exif, offsetTimeName); len(offsetTime) > 0 {
+		for _, date := range dates {
 			if createDate, err := time.Parse(tzPattern, date+offsetTime); err == nil {
 				return createDate
 			}
