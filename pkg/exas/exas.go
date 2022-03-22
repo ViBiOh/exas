@@ -82,7 +82,7 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
+func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
 	if a.tracer != nil {
 		var span trace.Span
 		ctx, span = a.tracer.Start(ctx, "exiftool")
@@ -98,8 +98,6 @@ func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
 	cmd.Stdin = input
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
-
-	var exif model.Exif
 
 	if err := cmd.Run(); err != nil {
 		return exif, fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err)
@@ -118,15 +116,9 @@ func (a App) get(ctx context.Context, input io.Reader) (model.Exif, error) {
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
-	if a.geocodeApp.Enabled() {
-		geocode, err := a.geocodeApp.GetGeocoding(ctx, exif)
-		if err != nil {
-			return exif, fmt.Errorf("unable to append geocoding: %s", err)
-		}
-
-		if !geocode.IsZero() {
-			exif.Geocode = geocode
-		}
+	exif.Geocode, err = a.geocodeApp.GetGeocoding(ctx, exif)
+	if err != nil {
+		return exif, fmt.Errorf("unable to append geocoding: %s", err)
 	}
 
 	return exif, nil

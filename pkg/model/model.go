@@ -9,9 +9,14 @@ type Geocode struct {
 	Longitude float64           `json:"lon,omitempty"`
 }
 
-// IsZero checks if struct is empty or not
-func (g Geocode) IsZero() bool {
+// HasAddress checks if struct has address
+func (g Geocode) HasAddress() bool {
 	return len(g.Address) == 0
+}
+
+// HasCoordinates checks if struct has coordinates
+func (g Geocode) HasCoordinates() bool {
+	return g.Latitude != 0 && g.Longitude != 0
 }
 
 // Exif data

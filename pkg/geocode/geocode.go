@@ -86,26 +86,28 @@ func (a App) Close() {
 }
 
 // GetGeocoding of given exif data
-func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (model.Geocode, error) {
-	if a.ticker != nil {
-		<-a.ticker.C
-	}
-
+func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.Geocode, err error) {
 	if a.tracer != nil {
 		var span trace.Span
 		ctx, span = a.tracer.Start(ctx, "geocode")
 		defer span.End()
 	}
 
-	var geocode model.Geocode
-
-	lat, lon, err := extractCoordinates(exif.Data)
+	geocode.Latitude, geocode.Longitude, err = extractCoordinates(exif.Data)
 	if err != nil {
 		return geocode, fmt.Errorf("unable to get gps coordinate: %s", err)
 	}
 
-	if lat != 0 && lon != 0 {
-		if geocode, err = a.getReverseGeocode(ctx, lat, lon); err != nil {
+	if !a.Enabled() {
+		return
+	}
+
+	if a.ticker != nil {
+		<-a.ticker.C
+	}
+
+	if geocode.HasCoordinates() {
+		if geocode, err = a.getReverseGeocode(ctx, geocode); err != nil {
 			return geocode, fmt.Errorf("unable to reverse geocode: %s", err)
 		}
 	}
@@ -191,34 +193,31 @@ func convertDegreeMinuteSecondToDecimal(location string) (float64, error) {
 	return dd, nil
 }
 
-func (a App) getReverseGeocode(ctx context.Context, lat, lon float64) (model.Geocode, error) {
+func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (model.Geocode, error) {
 	params := url.Values{}
-	params.Add("lat", fmt.Sprintf("%.6f", lat))
-	params.Add("lon", fmt.Sprintf("%.6f", lon))
+	params.Add("lat", fmt.Sprintf("%.6f", geocode.Latitude))
+	params.Add("lon", fmt.Sprintf("%.6f", geocode.Longitude))
 	params.Add("format", "json")
 	params.Add("zoom", "18")
 
 	a.increaseMetric("requested")
 
-	var output model.Geocode
-	var geocode reverseGeocodeResponse
+	var reverseGeo reverseGeocodeResponse
 
 	resp, err := a.geocodeReq.Path(fmt.Sprintf("/reverse?%s", params.Encode())).Send(ctx, nil)
 	if err != nil {
 		a.increaseMetric("api_error")
-		return output, fmt.Errorf("unable to get reverse geocoding: %s", err)
+		return geocode, fmt.Errorf("unable to get reverse geocoding: %s", err)
 	}
 
-	if err = httpjson.Read(resp, &geocode); err != nil {
+	if err = httpjson.Read(resp, &reverseGeo); err != nil {
 		a.increaseMetric("decode_error")
-		return output, fmt.Errorf("unable to decode reverse geocoding: %s", err)
+		return geocode, fmt.Errorf("unable to decode reverse geocoding: %s", err)
 	}
 
-	output.Longitude = lon
-	output.Latitude = lat
-	output.Address = geocode.Address
+	geocode.Address = reverseGeo.Address
 
-	return output, nil
+	return geocode, nil
 }
 
 func (a App) increaseMetric(state string) {
