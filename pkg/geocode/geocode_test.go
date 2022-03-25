@@ -14,30 +14,26 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 		location string
 	}
 
-	cases := []struct {
-		intention string
-		args      args
-		want      float64
-		wantErr   error
+	cases := map[string]struct {
+		args    args
+		want    float64
+		wantErr error
 	}{
-		{
-			"empty",
+		"empty": {
 			args{
 				location: "",
 			},
 			0,
 			errors.New("unable to parse GPS data"),
 		},
-		{
-			"north",
+		"north": {
 			args{
 				location: "1 deg 2' 3\" N",
 			},
 			1.034167,
 			nil,
 		},
-		{
-			"west",
+		"west": {
 			args{
 				location: "1 deg 2' 3\" W",
 			},
@@ -46,8 +42,8 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.intention, func(t *testing.T) {
+	for intention, tc := range cases {
+		t.Run(intention, func(t *testing.T) {
 			got, gotErr := convertDegreeMinuteSecondToDecimal(tc.args.location)
 
 			failed := false
