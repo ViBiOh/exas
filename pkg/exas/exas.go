@@ -49,8 +49,8 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		amqpExchange:   flags.New(prefix, "exas", "Exchange").Default("fibr", nil).Label("AMQP Exchange Name").ToString(fs),
-		amqpRoutingKey: flags.New(prefix, "exas", "RoutingKey").Default("exif_output", nil).Label("AMQP Routing Key to fibr").ToString(fs),
+		amqpExchange:   flags.String(fs, prefix, "exas", "Exchange", "AMQP Exchange Name", "fibr", nil),
+		amqpRoutingKey: flags.String(fs, prefix, "exas", "RoutingKey", "AMQP Routing Key to fibr", "exif_output", nil),
 	}
 }
 
