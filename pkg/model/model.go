@@ -11,7 +11,7 @@ type Geocode struct {
 
 // HasAddress checks if struct has address
 func (g Geocode) HasAddress() bool {
-	return len(g.Address) == 0
+	return len(g.Address) != 0
 }
 
 // HasCoordinates checks if struct has coordinates
