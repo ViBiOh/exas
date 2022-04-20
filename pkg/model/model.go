@@ -21,10 +21,10 @@ func (g Geocode) HasCoordinates() bool {
 
 // Exif data
 type Exif struct {
-	Data        map[string]any `json:"data,omitempty"`
 	Date        time.Time      `json:"date,omitempty"`
-	Geocode     Geocode        `json:"geocode,omitempty"`
+	Data        map[string]any `json:"data,omitempty"`
 	Description string         `json:"description,omitempty"`
+	Geocode     Geocode        `json:"geocode,omitempty"`
 }
 
 // IsZero checks if struct is empty or not
