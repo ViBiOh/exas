@@ -151,6 +151,10 @@ func getCoordinate(data map[string]any, key string) (float64, error) {
 		return 0, fmt.Errorf("key `%s` is not a string", key)
 	}
 
+	if len(coordinateStr) == 0 {
+		return 0, nil
+	}
+
 	coordinate, err := convertDegreeMinuteSecondToDecimal(coordinateStr)
 	if err != nil {
 		return 0, fmt.Errorf("unable to parse `%s` with value `%s`: %s", key, coordinateStr, err)
