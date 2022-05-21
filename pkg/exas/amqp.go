@@ -8,8 +8,8 @@ import (
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type amqpResponse struct {
@@ -36,11 +36,8 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 
 	ctx := context.Background()
 
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "amqp")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
+	defer end()
 
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
