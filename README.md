@@ -53,8 +53,8 @@ Usage of exas:
         [amqp] Prefetch count for QoS {EXAS_AMQP_PREFETCH} (default 1)
   -amqpQueue string
         [amqp] Queue name {EXAS_AMQP_QUEUE} (default "exas")
-  -amqpRetryInterval string
-        [amqp] Interval duration when send fails {EXAS_AMQP_RETRY_INTERVAL} (default "1h")
+  -amqpRetryInterval duration
+        [amqp] Interval duration when send fails {EXAS_AMQP_RETRY_INTERVAL} (default 1h0m0s)
   -amqpRoutingKey string
         [amqp] RoutingKey name {EXAS_AMQP_ROUTING_KEY} (default "exif_input")
   -amqpURI string
@@ -65,10 +65,10 @@ Usage of exas:
         [exas] AMQP Exchange Name {EXAS_EXCHANGE} (default "fibr")
   -geocodeURL string
         [exif] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") {EXAS_GEOCODE_URL}
-  -graceDuration string
-        [http] Grace duration when SIGTERM received {EXAS_GRACE_DURATION} (default "30s")
-  -idleTimeout string
-        [server] Idle Timeout {EXAS_IDLE_TIMEOUT} (default "2m")
+  -graceDuration duration
+        [http] Grace duration when SIGTERM received {EXAS_GRACE_DURATION} (default 30s)
+  -idleTimeout duration
+        [server] Idle Timeout {EXAS_IDLE_TIMEOUT} (default 2m0s)
   -key string
         [server] Key file {EXAS_KEY}
   -loggerJson
@@ -91,26 +91,26 @@ Usage of exas:
         [prometheus] Certificate file {EXAS_PROMETHEUS_CERT}
   -prometheusGzip
         [prometheus] Enable gzip compression of metrics output {EXAS_PROMETHEUS_GZIP}
-  -prometheusIdleTimeout string
-        [prometheus] Idle Timeout {EXAS_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
+  -prometheusIdleTimeout duration
+        [prometheus] Idle Timeout {EXAS_PROMETHEUS_IDLE_TIMEOUT} (default 10s)
   -prometheusIgnore string
         [prometheus] Ignored path prefixes for metrics, comma separated {EXAS_PROMETHEUS_IGNORE}
   -prometheusKey string
         [prometheus] Key file {EXAS_PROMETHEUS_KEY}
   -prometheusPort uint
         [prometheus] Listen port (0 to disable) {EXAS_PROMETHEUS_PORT} (default 9090)
-  -prometheusReadTimeout string
-        [prometheus] Read Timeout {EXAS_PROMETHEUS_READ_TIMEOUT} (default "5s")
-  -prometheusShutdownTimeout string
-        [prometheus] Shutdown Timeout {EXAS_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
-  -prometheusWriteTimeout string
-        [prometheus] Write Timeout {EXAS_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
-  -readTimeout string
-        [server] Read Timeout {EXAS_READ_TIMEOUT} (default "2m")
+  -prometheusReadTimeout duration
+        [prometheus] Read Timeout {EXAS_PROMETHEUS_READ_TIMEOUT} (default 5s)
+  -prometheusShutdownTimeout duration
+        [prometheus] Shutdown Timeout {EXAS_PROMETHEUS_SHUTDOWN_TIMEOUT} (default 5s)
+  -prometheusWriteTimeout duration
+        [prometheus] Write Timeout {EXAS_PROMETHEUS_WRITE_TIMEOUT} (default 10s)
+  -readTimeout duration
+        [server] Read Timeout {EXAS_READ_TIMEOUT} (default 2m0s)
   -routingKey string
         [exas] AMQP Routing Key to fibr {EXAS_ROUTING_KEY} (default "exif_output")
-  -shutdownTimeout string
-        [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default "10s")
+  -shutdownTimeout duration
+        [server] Shutdown Timeout {EXAS_SHUTDOWN_TIMEOUT} (default 10s)
   -storageFileSystemDirectory /data
         [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. {EXAS_STORAGE_FILE_SYSTEM_DIRECTORY}
   -storageObjectAccessKey string
@@ -123,6 +123,8 @@ Usage of exas:
         [storage] Use SSL {EXAS_STORAGE_OBJECT_SSL} (default true)
   -storageObjectSecretAccess string
         [storage] Storage Object Secret Access {EXAS_STORAGE_OBJECT_SECRET_ACCESS}
+  -storagePartSize uint
+        [storage] PartSize configuration {EXAS_STORAGE_PART_SIZE} (default 5242880)
   -tracerRate string
         [tracer] Jaeger sample rate, 'always', 'never' or a float value {EXAS_TRACER_RATE} (default "always")
   -tracerURL string
@@ -131,6 +133,6 @@ Usage of exas:
         [alcotest] URL to check {EXAS_URL}
   -userAgent string
         [alcotest] User-Agent for check {EXAS_USER_AGENT} (default "Alcotest")
-  -writeTimeout string
-        [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default "2m")
+  -writeTimeout duration
+        [server] Write Timeout {EXAS_WRITE_TIMEOUT} (default 2m0s)
 ```
