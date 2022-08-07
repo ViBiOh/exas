@@ -41,23 +41,23 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
-		return fmt.Errorf("unable to decode: %s: %w", err, errUnmarshal)
+		return fmt.Errorf("decode: %s: %w", err, errUnmarshal)
 	}
 
 	reader, err := a.storageApp.ReadFrom(ctx, item.Pathname)
 	if err != nil {
-		return fmt.Errorf("unable to read from storage: %s", err)
+		return fmt.Errorf("read from storage: %s", err)
 	}
 	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
 
 	var exif model.Exif
 	exif, err = a.get(ctx, reader)
 	if err != nil {
-		return fmt.Errorf("unable to get exif: %s: %w", err, errExtract)
+		return fmt.Errorf("get exif: %s: %w", err, errExtract)
 	}
 
 	if err = a.amqpClient.PublishJSON(amqpResponse{Item: item, Exif: exif}, a.amqpExchange, a.amqpRoutingKey); err != nil {
-		return fmt.Errorf("unable to publish amqp message: %s: %w", err, errPublish)
+		return fmt.Errorf("publish amqp message: %s: %w", err, errPublish)
 	}
 
 	return nil

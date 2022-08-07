@@ -8,6 +8,6 @@ import (
 
 func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
+		logger.WithField("fn", fn).WithField("item", item).Error("close: %s", err)
 	}
 }

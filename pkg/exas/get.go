@@ -16,7 +16,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	reader, err := a.storageApp.ReadFrom(r.Context(), r.URL.Path)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to read from storage: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("read from storage: %s", err))
 		return
 	}
 	defer closeWithLog(reader, "AmqpHandler", r.URL.Path)

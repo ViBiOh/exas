@@ -97,12 +97,12 @@ func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err err
 	cmd.Stderr = buffer
 
 	if err := cmd.Run(); err != nil {
-		return exif, fmt.Errorf("unable to extract exif `%s`: %s", buffer.String(), err)
+		return exif, fmt.Errorf("extract exif `%s`: %s", buffer.String(), err)
 	}
 
 	var exifs []map[string]any
 	if err := json.NewDecoder(buffer).Decode(&exifs); err != nil {
-		return exif, fmt.Errorf("unable to decode exiftool output: %s", err)
+		return exif, fmt.Errorf("decode exiftool output: %s", err)
 	}
 
 	var exifData map[string]any
@@ -115,7 +115,7 @@ func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err err
 
 	exif.Geocode, err = a.geocodeApp.GetGeocoding(ctx, exif)
 	if err != nil {
-		return exif, fmt.Errorf("unable to append geocoding: %s", err)
+		return exif, fmt.Errorf("append geocoding: %s", err)
 	}
 
 	return exif, nil

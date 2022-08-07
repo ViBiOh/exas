@@ -24,7 +24,7 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 				location: "",
 			},
 			0,
-			errors.New("unable to parse GPS data"),
+			errors.New("parse GPS data"),
 		},
 		"north": {
 			args{
