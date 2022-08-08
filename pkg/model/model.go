@@ -29,5 +29,10 @@ type Exif struct {
 
 // IsZero checks if struct is empty or not
 func (e Exif) IsZero() bool {
-	return len(e.Data) == 0 && len(e.Description) == 0
+	return !e.HasData() && len(e.Description) == 0
+}
+
+// IsZero checks if struct is empty or not
+func (e Exif) HasData() bool {
+	return len(e.Data) != 0
 }
