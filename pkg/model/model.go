@@ -32,7 +32,7 @@ func (e Exif) IsZero() bool {
 	return !e.HasData() && len(e.Description) == 0
 }
 
-// IsZero checks if struct is empty or not
+// HasData checks if struct has data and not only description
 func (e Exif) HasData() bool {
 	return len(e.Data) != 0
 }
