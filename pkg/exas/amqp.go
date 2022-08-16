@@ -46,7 +46,7 @@ func (a App) AmqpHandler(message amqp.Delivery) (err error) {
 
 	reader, err := a.storageApp.ReadFrom(ctx, item.Pathname)
 	if err != nil {
-		return fmt.Errorf("read from storage: %s", err)
+		return fmt.Errorf("read from storage: %w", err)
 	}
 	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
 
