@@ -55,14 +55,14 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracerApp tracer.App) App {
+func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
 	return App{
 		geocodeApp:     geocodeApp,
 		storageApp:     storageApp,
 		amqpClient:     amqpClient,
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
-		tracer:         tracerApp.GetTracer("exas"),
+		tracer:         tracer,
 
 		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "source", "kind", "state"),
 	}

@@ -55,7 +55,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, tracerApp tracer.App) (App, error) {
+func New(config Config, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer) (App, error) {
 	geocodeURL := strings.TrimSpace(*config.geocodeURL)
 
 	var ticker *time.Ticker
@@ -66,7 +66,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer, tracerApp tr
 	return App{
 		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
 		metric:     prom.CounterVec(prometheusRegisterer, "exas", "", "geocode", "state"),
-		tracer:     tracerApp.GetTracer("geocode"),
+		tracer:     tracer,
 		ticker:     ticker,
 	}, nil
 }
