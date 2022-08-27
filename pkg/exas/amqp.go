@@ -27,14 +27,12 @@ var (
 )
 
 // AmqpHandler for amqp request
-func (a App) AmqpHandler(message amqp.Delivery) (err error) {
+func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
 	defer a.handleMetric("amqp", "exif", err)
 
 	if !a.storageApp.Enabled() {
 		return errNoAccess
 	}
-
-	ctx := context.Background()
 
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
 	defer end()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -73,7 +74,7 @@ func main() {
 	logger.Fatal(err)
 	defer geocodeApp.Close()
 
-	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
+	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer(), tracerApp.GetTracer("amqp"))
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		logger.Fatal(err)
 	} else if amqpClient != nil {
@@ -82,12 +83,12 @@ func main() {
 
 	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient, storageProvider, tracerApp.GetTracer("exas"))
 
-	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, exasApp.AmqpHandler)
+	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, tracerApp.GetTracer("amqp_handler"), exasApp.AmqpHandler)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	go amqphandlerApp.Start(healthApp.Done())
+	go amqphandlerApp.Start(context.Background(), healthApp.Done())
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(exasApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware))
