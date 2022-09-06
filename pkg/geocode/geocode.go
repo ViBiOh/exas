@@ -205,7 +205,7 @@ func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (mode
 
 	var reverseGeo reverseGeocodeResponse
 
-	resp, err := a.geocodeReq.Path(fmt.Sprintf("/reverse?%s", params.Encode())).Send(ctx, nil)
+	resp, err := a.geocodeReq.Path("/reverse?%s", params.Encode()).Send(ctx, nil)
 	if err != nil {
 		a.increaseMetric("api_error")
 		return geocode, fmt.Errorf("get reverse geocoding: %w", err)
