@@ -54,7 +54,7 @@ func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error)
 		return fmt.Errorf("get exif: %s: %w", err, errExtract)
 	}
 
-	if err = a.amqpClient.PublishJSON(amqpResponse{Item: item, Exif: exif}, a.amqpExchange, a.amqpRoutingKey); err != nil {
+	if err = a.amqpClient.PublishJSON(ctx, amqpResponse{Item: item, Exif: exif}, a.amqpExchange, a.amqpRoutingKey); err != nil {
 		return fmt.Errorf("publish amqp message: %s: %w", err, errPublish)
 	}
 
