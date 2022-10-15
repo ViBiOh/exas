@@ -110,6 +110,12 @@ func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err err
 		exifData = exifs[0]
 	}
 
+	for key, value := range exifData {
+		if strValue, ok := value.(string); ok && strings.HasPrefix(strValue, "(Binary data") {
+			delete(exifData, key)
+		}
+	}
+
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
