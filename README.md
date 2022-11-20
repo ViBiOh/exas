@@ -117,8 +117,12 @@ Usage of exas:
         [storage] Storage Object Access Key {EXAS_STORAGE_OBJECT_ACCESS_KEY}
   -storageObjectBucket string
         [storage] Storage Object Bucket {EXAS_STORAGE_OBJECT_BUCKET}
+  -storageObjectClass string
+        [storage] Storage Object Class {EXAS_STORAGE_OBJECT_CLASS}
   -storageObjectEndpoint string
         [storage] Storage Object endpoint {EXAS_STORAGE_OBJECT_ENDPOINT}
+  -storageObjectRegion string
+        [storage] Storage Object Region {EXAS_STORAGE_OBJECT_REGION}
   -storageObjectSSL
         [storage] Use SSL {EXAS_STORAGE_OBJECT_SSL} (default true)
   -storageObjectSecretAccess string
