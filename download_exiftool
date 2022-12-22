@@ -27,7 +27,7 @@ main() {
 
   var_info "Downloading exiftool"
 
-  local EXIF_VERSION="12.39"
+  local EXIF_VERSION="12.52"
   local EXIF_ARCHIVE_NAME="Image-ExifTool-${EXIF_VERSION}.tar.gz"
 
   curl --disable --silent --show-error --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "https://exiftool.org/${EXIF_ARCHIVE_NAME}"
