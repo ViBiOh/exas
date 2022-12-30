@@ -25,7 +25,7 @@ spec:
     nameOverride: exas
     image:
       name: vibioh/exas
-      tag: "202212280918" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tag: "202212301006" # {"$imagepolicy": "default:flux-exas-api:tag"}
     volumes:
       - name: data
         persistentVolumeClaim:
