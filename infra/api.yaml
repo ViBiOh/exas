@@ -26,6 +26,8 @@ spec:
     image:
       name: vibioh/exas
       tag: "202301271511" # {"$imagepolicy": "default:flux-exas-api:tag"}
+    strategy:
+      type: Recreate
     volumes:
       - name: data
         persistentVolumeClaim:
