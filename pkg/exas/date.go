@@ -15,6 +15,7 @@ var (
 		"SubSecCreateDate",
 		"DateCreated",
 		"DateTimeOriginal",
+		"CreationDate",
 		"CreateDate",
 	}
 
