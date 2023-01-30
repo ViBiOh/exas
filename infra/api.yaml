@@ -49,9 +49,9 @@ spec:
         operator: Exists
     resources:
       limits:
-        memory: "512i"
+        memory: "512Mi"
       requests:
-        memory: "512i"
+        memory: "512Mi"
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
