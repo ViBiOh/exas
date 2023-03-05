@@ -84,7 +84,7 @@ func (a App) Handler() http.Handler {
 
 func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "exiftool")
-	defer end()
+	defer end(&err)
 
 	cmd := exec.Command("./exiftool", "-json", "-")
 

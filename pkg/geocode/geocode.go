@@ -88,7 +88,7 @@ func (a App) Close() {
 // GetGeocoding of given exif data
 func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.Geocode, err error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "geocode")
-	defer end()
+	defer end(&err)
 
 	geocode.Latitude, geocode.Longitude, err = extractCoordinates(exif.Data)
 	if err != nil {

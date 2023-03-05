@@ -130,9 +130,9 @@ Usage of exas:
   -storagePartSize uint
         [storage] PartSize configuration {EXAS_STORAGE_PART_SIZE} (default 5242880)
   -tracerRate string
-        [tracer] Jaeger sample rate, 'always', 'never' or a float value {EXAS_TRACER_RATE} (default "always")
+        [tracer] OpenTracing sample rate, 'always', 'never' or a float value {EXAS_TRACER_RATE} (default "always")
   -tracerURL string
-        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {EXAS_TRACER_URL}
+        [tracer] OpenTracing gRPC endpoint (e.g. otel-exporter:4317) {EXAS_TRACER_URL}
   -url string
         [alcotest] URL to check {EXAS_URL}
   -userAgent string

@@ -39,7 +39,7 @@ spec:
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
-      EXAS_TRACER_URL: http://jaeger.monitoring:14268/api/traces
+      EXAS_TRACER_URL: otel-collector.monitoring:4317
       OTEL_SERVICE_NAME: exas
     secrets:
       EXAS_AMQP_URI: AgAKGKHFZX3fmvKHTN20cCmpP/HVG8tOe/l1Mb/5HPGzxtL6DQDCbljiEETk1iNYoKuLP3b0BnvXM1KMm7L+QcaN2dPyIAkEdQRNRklRan/qZtjBYbZIX3WcaQY4i3Sr6OtzqkWg7cBjmM9Bt187+YuZlOtoy1siunTLWkdgvxwroB+mHIGIbiuiwuoruo9j05a9mGyjM5K/Vj+r/hOPoZcp3ml+CKzDxkUXbBw2ktZ123DHHnU0BqheK8crL9/mEYovvVaSdNQ6aPJUSvUNPnFfBc64/Ar2j9TkI5yEoJvtOmzv7W1mT5fRZzzjyHkUXq52SaIHSwxfjHcsFN7VFxxs8i16k07L4/sQzt2TpSEpTpMNbCWBTZZGysEVPKiqobJGk10bHog+GIpfV16OgBtgKsEN7FKBjBDPlvi51RO3I0s39abV8xGJvgKc6E0uCERy0JJr5kyiDBkeIrZjnLWeYLPvVT2nuQ6qBCTscBcb9Bo2q9sWp4UK2mI1RL/S3wzYenx/RMrWO8CuR0UXPzdZfpiKrWIkdJhG/qBgM0ejrgp6jDofQp/Xtj6Ap3c/VifsqPUAs3RriVRwkkDX4ko3XDO5Iv/SNz1u8R3Ur/hG5EMKSH98Of4a8lkkTbHO/i4CVL8pxaHKsOj+T2hxdZj6zmhP9lB8JyjZ2E/j5TFKMuopV/cwl1hI1GzbgmMbTF0YrOiEaFzrfod5F/1NVqHXU8gWtQKq1L5FGUUcHphWi23JxFjeymGTa4spfcld5lplQ7s=

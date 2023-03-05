@@ -35,7 +35,7 @@ func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error)
 	}
 
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
-	defer end()
+	defer end(&err)
 
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
