@@ -9,7 +9,7 @@ import (
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type amqpResponse struct {
