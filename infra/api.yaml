@@ -36,6 +36,7 @@ spec:
       - name: data
         mountPath: /data
     config:
+      GOMAXPROCS: "1"
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
