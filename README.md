@@ -59,8 +59,6 @@ Usage of exas:
         [amqp] RoutingKey name {EXAS_AMQP_ROUTING_KEY} (default "exif_input")
   -amqpURI string
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {EXAS_AMQP_URI}
-  -amqpWaitTimeout duration
-        [amqp] Wait duration for AMQP to be ready {EXAS_AMQP_WAIT_TIMEOUT} (default 5s)
   -cert string
         [server] Certificate file {EXAS_CERT}
   -exchange string
