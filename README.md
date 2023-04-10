@@ -24,15 +24,6 @@ You can configure app by passing CLI args or environment variables (cf. [Usage](
 
 You'll find a Kubernetes exemple in the [`infra/`](infra) folder, using my [`app chart`](https://github.com/ViBiOh/charts/tree/main/app)
 
-## CI
-
-Following variables are required for CI:
-
-|      Name       |           Purpose           |
-| :-------------: | :-------------------------: |
-| **DOCKER_USER** | for publishing Docker image |
-| **DOCKER_PASS** | for publishing Docker image |
-
 ## Usage
 
 The application can be configured by passing CLI args described below or their equivalent as environment variable. CLI values take precedence over environments variables.
