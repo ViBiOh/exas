@@ -52,7 +52,7 @@ spec:
       limits:
         memory: "512Mi"
       requests:
-        memory: "512Mi"
+        memory: "128Mi"
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
