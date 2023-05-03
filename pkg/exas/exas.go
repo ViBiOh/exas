@@ -49,8 +49,8 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		amqpExchange:   flags.String(fs, prefix, "exas", "Exchange", "AMQP Exchange Name", "fibr", overrides),
-		amqpRoutingKey: flags.String(fs, prefix, "exas", "RoutingKey", "AMQP Routing Key to fibr", "exif_output", overrides),
+		amqpExchange:   flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").String(fs, "fibr", overrides),
+		amqpRoutingKey: flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").String(fs, "exif_output", overrides),
 	}
 }
 
