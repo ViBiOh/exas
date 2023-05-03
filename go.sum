@@ -34,8 +34,8 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
-github.com/ViBiOh/absto v1.4.5 h1:ksGP4G1Ked85KVfSNlMcNCXEZZmuCMTZVAPE1m/BOT4=
-github.com/ViBiOh/absto v1.4.5/go.mod h1:9psb2+hglYxycRbFJoQurZtCNeh5Pgz0Da0jaBE6WbU=
+github.com/ViBiOh/absto v1.4.6 h1:uHA9i8LkA8K7/bkbfibMz7sDh029SwYJlHZkiO3BAdc=
+github.com/ViBiOh/absto v1.4.6/go.mod h1:HW3Jsqh+MSeE51Pgwf/yEEfvyh4JdtwSl6q/UEQkpHg=
 github.com/ViBiOh/flags v1.3.0 h1:onBzSsBXTAFus6l5RyjwrZ7vH7uKd54GtLoWHBF9XF0=
 github.com/ViBiOh/flags v1.3.0/go.mod h1:dwBidG6lR5ki7dkavuehBq3OTcV3S/i6yVvHhxxZv8o=
 github.com/ViBiOh/httputils/v4 v4.57.0 h1:96eYAhMgofrMn2TG+6jDqZM2GXhJsZiwuJH+KNWJs5A=
@@ -160,8 +160,8 @@ github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHm
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
-github.com/klauspost/compress v1.16.4 h1:91KN02FnsOYhuunwU4ssRe8lc2JosWmizWa91B5v1PU=
-github.com/klauspost/compress v1.16.4/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
+github.com/klauspost/compress v1.16.5 h1:IFV2oUNUzZaz+XyusxpLzpzS8Pt5rh0Z16For/djlyI=
+github.com/klauspost/compress v1.16.5/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
 github.com/klauspost/cpuid/v2 v2.0.1/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.0.4/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.2.4 h1:acbojRNwl3o09bUq+yDCtZFc1aiwaAAxtcn8YkZXnvk=
