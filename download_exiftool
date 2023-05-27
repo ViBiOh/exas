@@ -15,8 +15,7 @@ script_dir() {
 }
 
 main() {
-  source "$(script_dir)/scripts/meta" && meta_init "var"
-  var_color
+  source "$(script_dir)/scripts/meta" && meta_check "var"
 
   local TARGET_NAME="exiftool"
 
