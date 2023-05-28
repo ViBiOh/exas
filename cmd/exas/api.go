@@ -30,6 +30,7 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet("exas", flag.ExitOnError)
+	fs.Usage = flags.Usage(fs)
 
 	appServerConfig := server.Flags(fs, "", flags.NewOverride("ReadTimeout", 2*time.Minute), flags.NewOverride("WriteTimeout", 2*time.Minute))
 	promServerConfig := server.Flags(fs, "prometheus", flags.NewOverride("Port", uint(9090)), flags.NewOverride("IdleTimeout", 10*time.Second), flags.NewOverride("ShutdownTimeout", 5*time.Second))
