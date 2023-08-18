@@ -73,7 +73,7 @@ func main() {
 	appServer := server.New(appServerConfig)
 	healthApp := health.New(healthConfig)
 
-	meter := telemetryApp.GetMeter("exas")
+	meter := telemetryApp.GetMeter("github.com/ViBiOh/exas/cmd/exas")
 
 	storageProvider, err := absto.New(abstoConfig, telemetryApp.GetTracer("storage"))
 	if err != nil {
