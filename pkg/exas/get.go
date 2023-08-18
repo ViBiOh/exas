@@ -24,10 +24,10 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	exif, err := a.get(r.Context(), reader)
 	if err != nil {
 		httperror.InternalServerError(w, err)
-		a.increaseMetric("http", "exif", "error")
+		a.increaseMetric(r.Context(), "http", "exif", "error")
 		return
 	}
 
 	httpjson.Write(w, http.StatusOK, exif)
-	a.increaseMetric("http", "exif", "success")
+	a.increaseMetric(r.Context(), "http", "exif", "success")
 }

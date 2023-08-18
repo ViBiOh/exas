@@ -8,7 +8,7 @@ import (
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -28,13 +28,13 @@ var (
 
 // AmqpHandler for amqp request
 func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
-	defer a.handleMetric("amqp", "exif", err)
+	defer a.handleMetric(ctx, "amqp", "exif", err)
 
 	if !a.storageApp.Enabled() {
 		return errNoAccess
 	}
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "amqp")
 	defer end(&err)
 
 	var item absto.Item

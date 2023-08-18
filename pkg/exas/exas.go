@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -17,9 +18,8 @@ import (
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
-	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -34,7 +34,7 @@ type App struct {
 	storageApp     absto.Storage
 	tracer         trace.Tracer
 	amqpClient     *amqp.Client
-	metric         *prometheus.CounterVec
+	metric         metric.Int64Counter
 	amqpExchange   string
 	amqpRoutingKey string
 	geocodeApp     geocode.App
@@ -55,7 +55,17 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
+func New(config Config, geocodeApp geocode.App, meter metric.Meter, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
+	var counter metric.Int64Counter
+	if meter != nil {
+		var err error
+
+		counter, err = meter.Int64Counter("exas.item")
+		if err != nil {
+			slog.Error("create counter", "err", err)
+		}
+	}
+
 	return App{
 		geocodeApp:     geocodeApp,
 		storageApp:     storageApp,
@@ -64,7 +74,7 @@ func New(config Config, geocodeApp geocode.App, prometheusRegisterer prometheus.
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
 		tracer:         tracer,
 
-		metric: prom.CounterVec(prometheusRegisterer, "exas", "", "item", "source", "kind", "state"),
+		metric: counter,
 	}
 }
 
@@ -83,7 +93,7 @@ func (a App) Handler() http.Handler {
 }
 
 func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "exiftool")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "exiftool")
 	defer end(&err)
 
 	cmd := exec.Command("./exiftool", "-json", "-")

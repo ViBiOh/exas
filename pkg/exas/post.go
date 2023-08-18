@@ -12,11 +12,11 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	exif, err := a.get(r.Context(), r.Body)
 	if err != nil {
-		a.increaseMetric("http", "exif", "error")
+		a.increaseMetric(r.Context(), "http", "exif", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	a.increaseMetric("http", "exif", "success")
+	a.increaseMetric(r.Context(), "http", "exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
 }
