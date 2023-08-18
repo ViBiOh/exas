@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -22,11 +23,10 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/health"
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 )
 
 func main() {
@@ -34,13 +34,11 @@ func main() {
 	fs.Usage = flags.Usage(fs)
 
 	appServerConfig := server.Flags(fs, "", flags.NewOverride("ReadTimeout", 2*time.Minute), flags.NewOverride("WriteTimeout", 2*time.Minute))
-	promServerConfig := server.Flags(fs, "prometheus", flags.NewOverride("Port", uint(9090)), flags.NewOverride("IdleTimeout", 10*time.Second), flags.NewOverride("ShutdownTimeout", 5*time.Second))
 	healthConfig := health.Flags(fs, "")
 
 	alcotestConfig := alcotest.Flags(fs, "")
 	loggerConfig := logger.Flags(fs, "logger")
-	tracerConfig := tracer.Flags(fs, "tracer")
-	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
+	telemetryConfig := telemetry.Flags(fs, "telemetry")
 
 	exasConfig := exas.Flags(fs, "")
 	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", ""))
@@ -54,53 +52,65 @@ func main() {
 	}
 
 	alcotest.DoAndExit(alcotestConfig)
-	logger.Global(logger.New(loggerConfig))
-	defer logger.Close()
+
+	logger.Init(loggerConfig)
 
 	ctx := context.Background()
 
-	tracerApp, err := tracer.New(ctx, tracerConfig)
-	logger.Fatal(err)
-	defer tracerApp.Close(ctx)
-	request.AddTracerToDefaultClient(tracerApp.GetProvider())
+	telemetryApp, err := telemetry.New(ctx, telemetryConfig)
+	if err != nil {
+		slog.Error("create telemetry", "err", err)
+		os.Exit(1)
+	}
+
+	defer telemetryApp.Close(ctx)
+	request.AddOpenTelemetryToDefaultClient(telemetryApp.GetMeterProvider(), telemetryApp.GetTraceProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
 	appServer := server.New(appServerConfig)
-	promServer := server.New(promServerConfig)
-	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig, tracerApp.GetTracer("storage"))
-	logger.Fatal(err)
+	meter := telemetryApp.GetMeter("exas")
 
-	geocodeApp, err := geocode.New(geocodeConfig, prometheusApp.Registerer(), tracerApp.GetTracer("geocode"))
-	logger.Fatal(err)
+	storageProvider, err := absto.New(abstoConfig, telemetryApp.GetTracer("storage"))
+	if err != nil {
+		slog.Error("create absto", "err", err)
+		os.Exit(1)
+	}
+
+	geocodeApp, err := geocode.New(geocodeConfig, meter, telemetryApp.GetTracer("geocode"))
+	if err != nil {
+		slog.Error("create geocode", "err", err)
+		os.Exit(1)
+	}
+
 	defer geocodeApp.Close()
 
-	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer(), tracerApp.GetTracer("amqp"))
+	amqpClient, err := amqp.New(amqpConfig, meter, telemetryApp.GetTracer("amqp"))
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
-		logger.Fatal(err)
+		slog.Error("create amqp", "err", err)
+		os.Exit(1)
 	} else if amqpClient != nil {
 		defer amqpClient.Close()
 	}
 
-	exasApp := exas.New(exasConfig, geocodeApp, prometheusApp.Registerer(), amqpClient, storageProvider, tracerApp.GetTracer("exas"))
+	exasApp := exas.New(exasConfig, geocodeApp, meter, amqpClient, storageProvider, telemetryApp.GetTracer("exas"))
 
-	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, tracerApp.GetTracer("amqp_handler"), exasApp.AmqpHandler)
+	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryApp.GetTracer("amqp_handler"), exasApp.AmqpHandler)
 	if err != nil {
-		logger.Fatal(err)
+		slog.Error("create amqp handler", "err", err)
+		os.Exit(1)
 	}
 
 	go amqphandlerApp.Start(healthApp.Done(ctx))
 
 	endCtx := healthApp.End(ctx)
 
-	go promServer.Start(endCtx, "prometheus", prometheusApp.Handler())
-	go appServer.Start(endCtx, "http", httputils.Handler(exasApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware))
+	go appServer.Start(endCtx, "http", httputils.Handler(exasApp.Handler(), healthApp, recoverer.Middleware, telemetryApp.Middleware("http")))
 
 	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), promServer.Done(), amqphandlerApp.Done())
+	server.GracefulWait(appServer.Done(), amqphandlerApp.Done())
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -13,10 +14,10 @@ import (
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -36,7 +37,7 @@ type reverseGeocodeResponse struct {
 
 // App of package
 type App struct {
-	metric     *prometheus.CounterVec
+	metric     metric.Int64Counter
 	ticker     *time.Ticker
 	tracer     trace.Tracer
 	geocodeReq request.Request
@@ -55,7 +56,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer) (App, error) {
+func New(config Config, meter metric.Meter, tracer trace.Tracer) (App, error) {
 	geocodeURL := strings.TrimSpace(*config.geocodeURL)
 
 	var ticker *time.Ticker
@@ -63,9 +64,19 @@ func New(config Config, prometheusRegisterer prometheus.Registerer, tracer trace
 		ticker = time.NewTicker(publicNominatimInterval)
 	}
 
+	var counter metric.Int64Counter
+	if meter != nil {
+		var err error
+
+		counter, err = meter.Int64Counter("exas.geocode")
+		if err != nil {
+			slog.Error("create counter", "err", err)
+		}
+	}
+
 	return App{
 		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
-		metric:     prom.CounterVec(prometheusRegisterer, "exas", "", "geocode", "state"),
+		metric:     counter,
 		tracer:     tracer,
 		ticker:     ticker,
 	}, nil
@@ -87,7 +98,7 @@ func (a App) Close() {
 
 // GetGeocoding of given exif data
 func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.Geocode, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "geocode")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "geocode")
 	defer end(&err)
 
 	geocode.Latitude, geocode.Longitude, err = extractCoordinates(exif.Data)
@@ -110,11 +121,11 @@ func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.G
 	}
 
 	if len(geocode.Address) == 0 {
-		a.increaseMetric("empty")
+		a.increaseMetric(ctx, "empty")
 		return geocode, nil
 	}
 
-	a.increaseMetric("success")
+	a.increaseMetric(ctx, "success")
 
 	return geocode, nil
 }
@@ -201,18 +212,18 @@ func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (mode
 	params.Add("format", "json")
 	params.Add("zoom", "18")
 
-	a.increaseMetric("requested")
+	a.increaseMetric(ctx, "requested")
 
 	var reverseGeo reverseGeocodeResponse
 
 	resp, err := a.geocodeReq.Path("/reverse?%s", params.Encode()).Send(ctx, nil)
 	if err != nil {
-		a.increaseMetric("api_error")
+		a.increaseMetric(ctx, "api_error")
 		return geocode, fmt.Errorf("get reverse geocoding: %w", err)
 	}
 
 	if err = httpjson.Read(resp, &reverseGeo); err != nil {
-		a.increaseMetric("decode_error")
+		a.increaseMetric(ctx, "decode_error")
 		return geocode, fmt.Errorf("decode reverse geocoding: %w", err)
 	}
 
@@ -221,10 +232,12 @@ func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (mode
 	return geocode, nil
 }
 
-func (a App) increaseMetric(state string) {
+func (a App) increaseMetric(ctx context.Context, state string) {
 	if a.metric == nil {
 		return
 	}
 
-	a.metric.WithLabelValues(state).Inc()
+	a.metric.Add(ctx, 1, metric.WithAttributes(
+		attribute.String("state", state),
+	))
 }

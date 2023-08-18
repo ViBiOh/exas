@@ -36,11 +36,11 @@ spec:
       - name: data
         mountPath: /data
     config:
-      GOMAXPROCS: "1"
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
-      EXAS_TRACER_URL: otel-collector.observability:4317
+      EXAS_TELEMETRY_URL: otel-collector.observability:4317
+      GOMAXPROCS: "1"
       OTEL_SERVICE_NAME: exas
     secrets:
       EXAS_AMQP_URI: AgBXHmJI9iRMFechp/ZUYiRT4R5Us6OQ5kfqDPHxx+rmVxVAPk0x8DJaz4taHVBaCmPNUHHtYfkeOfWtf1MtroaUIWjMKQAaHnUbdmH/nSe6F4xWEEQmhEnxckdBLb6ea3euir1LRcwV4yMe6yucPbQEHH+tEi/GGx9eSsOV3+rxeg2REycqn2E5i70ry5SYVhXWbJWkvXCur7ktHoqaGKvteDnNvjyYgeD87/nOQtP5DFfSZB/Jbr0zpb5aphZBduHT9/TCQXnytckMUAMGeroTX4vgjcv1HnFWyIItsk1cXQG6zbEXoQ6kT4xDKdL2+R8sh9LnuaGHST5EV2U7TMyLLj7FLXbm+c2mcE9IdEhseuGH5DzGmxqHSr+85tvMQexy6zF6eaof+heJf4+1Xi7WcZylQaxskLqL56a3cnL1MmT3+VoiGUYJw3nV5eqiT3ZPeHoyyQBQncAAcF1ZrNAWM7GxF4Et5z31D/V4KVcFu9RNZngMLWLnXF5keGhnc70vkoJ/BMJH+REtTbuXZxMb28OEo7T99raSsM5g2qe10Mra6KieSbD0E1Zd7nlWGvyBboMBetiC4nyVLWctyDBwqId8laBKfUsby7M9SL3MebOp3Z/igfc4lg2fiOjtzgYhaSczKK7t+a84MNXF0lkXjkGYRC4Awa2QkocgJwsexl4LKUvzcQN3L4c428jL9XuE7YjRzlSplIzS8am93Zo7x8YgF4GOir7TFkWjHa7q5Wp5LwqwvYOEPVEYy7Ytpwt+
