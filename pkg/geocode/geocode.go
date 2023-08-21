@@ -56,7 +56,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, meter metric.Meter, tracer trace.Tracer) (App, error) {
+func New(config Config, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
 	geocodeURL := strings.TrimSpace(*config.geocodeURL)
 
 	var ticker *time.Ticker
@@ -64,22 +64,27 @@ func New(config Config, meter metric.Meter, tracer trace.Tracer) (App, error) {
 		ticker = time.NewTicker(publicNominatimInterval)
 	}
 
-	var counter metric.Int64Counter
-	if meter != nil {
+	app := App{
+		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
+		ticker:     ticker,
+	}
+
+	if meterProvider != nil {
+		meter := meterProvider.Meter("github.com/ViBiOh/exas/pkg/geocode")
+
 		var err error
 
-		counter, err = meter.Int64Counter("exas.geocode")
+		app.metric, err = meter.Int64Counter("exas.geocode")
 		if err != nil {
-			slog.Error("create counter", "err", err)
+			slog.Error("create geocode counter", "err", err)
 		}
 	}
 
-	return App{
-		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
-		metric:     counter,
-		tracer:     tracer,
-		ticker:     ticker,
-	}, nil
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("geocode")
+	}
+
+	return app
 }
 
 // Enabled checks that requirements are met

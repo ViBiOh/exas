@@ -55,27 +55,31 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, geocodeApp geocode.App, meter metric.Meter, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
-	var counter metric.Int64Counter
-	if meter != nil {
-		var err error
-
-		counter, err = meter.Int64Counter("exas.item")
-		if err != nil {
-			slog.Error("create counter", "err", err)
-		}
-	}
-
-	return App{
+func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client, storageApp absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
+	app := App{
 		geocodeApp:     geocodeApp,
 		storageApp:     storageApp,
 		amqpClient:     amqpClient,
 		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
 		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
-		tracer:         tracer,
-
-		metric: counter,
 	}
+
+	if meterProvider != nil {
+		meter := meterProvider.Meter("github.com/ViBiOh/exas/pkg/exas")
+
+		var err error
+
+		app.metric, err = meter.Int64Counter("exas.item")
+		if err != nil {
+			slog.Error("create counter", "err", err)
+		}
+	}
+
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("exas")
+	}
+
+	return app
 }
 
 // Handler for request. Should be use with net/http
