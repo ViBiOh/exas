@@ -35,37 +35,33 @@ type reverseGeocodeResponse struct {
 	Address map[string]string `json:"address"`
 }
 
-// App of package
-type App struct {
+type Config struct {
+	GeocodeURL string
+}
+
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
+	var config Config
+
+	flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("exif").StringVar(fs, &config.GeocodeURL, "", overrides)
+
+	return &config
+}
+
+type Service struct {
 	metric     metric.Int64Counter
 	ticker     *time.Ticker
 	tracer     trace.Tracer
 	geocodeReq request.Request
 }
 
-// Config of package
-type Config struct {
-	geocodeURL *string
-}
-
-// Flags adds flags for configuring package
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		geocodeURL: flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("exif").String(fs, "", overrides),
-	}
-}
-
-// New creates new App from Config
-func New(config Config, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
-	geocodeURL := strings.TrimSpace(*config.geocodeURL)
-
+func New(config *Config, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
 	var ticker *time.Ticker
-	if strings.HasPrefix(geocodeURL, publicNominatimURL) {
+	if strings.HasPrefix(config.GeocodeURL, publicNominatimURL) {
 		ticker = time.NewTicker(publicNominatimInterval)
 	}
 
-	app := App{
-		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(geocodeURL),
+	service := Service{
+		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(config.GeocodeURL),
 		ticker:     ticker,
 	}
 
@@ -74,36 +70,33 @@ func New(config Config, meterProvider metric.MeterProvider, tracerProvider trace
 
 		var err error
 
-		app.metric, err = meter.Int64Counter("exas.geocode")
+		service.metric, err = meter.Int64Counter("exas.geocode")
 		if err != nil {
 			slog.Error("create geocode counter", "err", err)
 		}
 	}
 
 	if tracerProvider != nil {
-		app.tracer = tracerProvider.Tracer("geocode")
+		service.tracer = tracerProvider.Tracer("geocode")
 	}
 
-	return app
+	return service
 }
 
-// Enabled checks that requirements are met
-func (a App) Enabled() bool {
-	return !a.geocodeReq.IsZero()
+func (s Service) Enabled() bool {
+	return !s.geocodeReq.IsZero()
 }
 
-// Close closes underlying resources
-func (a App) Close() {
-	if a.ticker == nil {
+func (s Service) Close() {
+	if s.ticker == nil {
 		return
 	}
 
-	a.ticker.Stop()
+	s.ticker.Stop()
 }
 
-// GetGeocoding of given exif data
-func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.Geocode, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "geocode")
+func (s Service) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.Geocode, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "geocode")
 	defer end(&err)
 
 	geocode.Latitude, geocode.Longitude, err = extractCoordinates(exif.Data)
@@ -111,26 +104,26 @@ func (a App) GetGeocoding(ctx context.Context, exif model.Exif) (geocode model.G
 		return geocode, fmt.Errorf("get gps coordinate: %w", err)
 	}
 
-	if !a.Enabled() {
+	if !s.Enabled() {
 		return
 	}
 
-	if a.ticker != nil {
-		<-a.ticker.C
+	if s.ticker != nil {
+		<-s.ticker.C
 	}
 
 	if geocode.HasCoordinates() {
-		if geocode, err = a.getReverseGeocode(ctx, geocode); err != nil {
+		if geocode, err = s.getReverseGeocode(ctx, geocode); err != nil {
 			return geocode, fmt.Errorf("reverse geocode: %w", err)
 		}
 	}
 
 	if len(geocode.Address) == 0 {
-		a.increaseMetric(ctx, "empty")
+		s.increaseMetric(ctx, "empty")
 		return geocode, nil
 	}
 
-	a.increaseMetric(ctx, "success")
+	s.increaseMetric(ctx, "success")
 
 	return geocode, nil
 }
@@ -210,25 +203,25 @@ func convertDegreeMinuteSecondToDecimal(location string) (float64, error) {
 	return dd, nil
 }
 
-func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (model.Geocode, error) {
+func (s Service) getReverseGeocode(ctx context.Context, geocode model.Geocode) (model.Geocode, error) {
 	params := url.Values{}
 	params.Add("lat", fmt.Sprintf("%.6f", geocode.Latitude))
 	params.Add("lon", fmt.Sprintf("%.6f", geocode.Longitude))
 	params.Add("format", "json")
 	params.Add("zoom", "18")
 
-	a.increaseMetric(ctx, "requested")
+	s.increaseMetric(ctx, "requested")
 
 	var reverseGeo reverseGeocodeResponse
 
-	resp, err := a.geocodeReq.Path("/reverse?%s", params.Encode()).Send(ctx, nil)
+	resp, err := s.geocodeReq.Path("/reverse?%s", params.Encode()).Send(ctx, nil)
 	if err != nil {
-		a.increaseMetric(ctx, "api_error")
+		s.increaseMetric(ctx, "api_error")
 		return geocode, fmt.Errorf("get reverse geocoding: %w", err)
 	}
 
 	if err = httpjson.Read(resp, &reverseGeo); err != nil {
-		a.increaseMetric(ctx, "decode_error")
+		s.increaseMetric(ctx, "decode_error")
 		return geocode, fmt.Errorf("decode reverse geocoding: %w", err)
 	}
 
@@ -237,12 +230,12 @@ func (a App) getReverseGeocode(ctx context.Context, geocode model.Geocode) (mode
 	return geocode, nil
 }
 
-func (a App) increaseMetric(ctx context.Context, state string) {
-	if a.metric == nil {
+func (s Service) increaseMetric(ctx context.Context, state string) {
+	if s.metric == nil {
 		return
 	}
 
-	a.metric.Add(ctx, 1, metric.WithAttributes(
+	s.metric.Add(ctx, 1, metric.WithAttributes(
 		attribute.String("state", state),
 	))
 }

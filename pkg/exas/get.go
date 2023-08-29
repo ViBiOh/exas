@@ -8,26 +8,26 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
-func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
-	if !a.storageApp.Enabled() {
+func (s Service) handleGet(w http.ResponseWriter, r *http.Request) {
+	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	reader, err := a.storageApp.ReadFrom(r.Context(), r.URL.Path)
+	reader, err := s.storage.ReadFrom(r.Context(), r.URL.Path)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("read from storage: %w", err))
 		return
 	}
 	defer closeWithLog(reader, "AmqpHandler", r.URL.Path)
 
-	exif, err := a.get(r.Context(), reader)
+	exif, err := s.get(r.Context(), reader)
 	if err != nil {
 		httperror.InternalServerError(w, err)
-		a.increaseMetric(r.Context(), "http", "exif", "error")
+		s.increaseMetric(r.Context(), "http", "exif", "error")
 		return
 	}
 
 	httpjson.Write(w, http.StatusOK, exif)
-	a.increaseMetric(r.Context(), "http", "exif", "success")
+	s.increaseMetric(r.Context(), "http", "exif", "success")
 }

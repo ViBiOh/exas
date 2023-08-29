@@ -57,32 +57,32 @@ func main() {
 
 	ctx := context.Background()
 
-	telemetryApp, err := telemetry.New(ctx, telemetryConfig)
+	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	if err != nil {
 		slog.Error("create telemetry", "err", err)
 		os.Exit(1)
 	}
 
-	defer telemetryApp.Close(ctx)
-	request.AddOpenTelemetryToDefaultClient(telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	defer telemetryService.Close(ctx)
+	request.AddOpenTelemetryToDefaultClient(telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthApp := health.New(healthConfig)
+	healthService := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig, telemetryApp.TracerProvider())
+	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
 		slog.Error("create absto", "err", err)
 		os.Exit(1)
 	}
 
-	geocodeApp := geocode.New(geocodeConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
-	defer geocodeApp.Close()
+	geocodeService := geocode.New(geocodeConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	defer geocodeService.Close()
 
-	amqpClient, err := amqp.New(amqpConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		slog.Error("create amqp", "err", err)
 		os.Exit(1)
@@ -90,20 +90,20 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	exasApp := exas.New(exasConfig, geocodeApp, amqpClient, storageProvider, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	exasService := exas.New(exasConfig, geocodeService, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
-	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), exasApp.AmqpHandler)
+	amqphandlerService, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), exasService.AmqpHandler)
 	if err != nil {
 		slog.Error("create amqp handler", "err", err)
 		os.Exit(1)
 	}
 
-	go amqphandlerApp.Start(healthApp.Done(ctx))
+	go amqphandlerService.Start(healthService.Done(ctx))
 
-	endCtx := healthApp.End(ctx)
+	endCtx := healthService.End(ctx)
 
-	go appServer.Start(endCtx, "http", httputils.Handler(exasApp.Handler(), healthApp, recoverer.Middleware, telemetryApp.Middleware("http")))
+	go appServer.Start(endCtx, "http", httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
-	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), amqphandlerApp.Done())
+	healthService.WaitForTermination(appServer.Done())
+	server.GracefulWait(appServer.Done(), amqphandlerService.Done())
 }

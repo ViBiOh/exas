@@ -26,15 +26,14 @@ var (
 	errPublish     = errors.New("publish error")
 )
 
-// AmqpHandler for amqp request
-func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
-	defer a.handleMetric(ctx, "amqp", "exif", err)
+func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
+	defer s.handleMetric(ctx, "amqp", "exif", err)
 
-	if !a.storageApp.Enabled() {
+	if !s.storage.Enabled() {
 		return errNoAccess
 	}
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "amqp")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "amqp")
 	defer end(&err)
 
 	var item absto.Item
@@ -42,19 +41,19 @@ func (a App) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error)
 		return fmt.Errorf("decode: %s: %w", err, errUnmarshal)
 	}
 
-	reader, err := a.storageApp.ReadFrom(ctx, item.Pathname)
+	reader, err := s.storage.ReadFrom(ctx, item.Pathname)
 	if err != nil {
 		return fmt.Errorf("read from storage: %w", err)
 	}
 	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
 
 	var exif model.Exif
-	exif, err = a.get(ctx, reader)
+	exif, err = s.get(ctx, reader)
 	if err != nil {
 		return fmt.Errorf("get exif: %s: %w", err, errExtract)
 	}
 
-	if err = a.amqpClient.PublishJSON(ctx, amqpResponse{Item: item, Exif: exif}, a.amqpExchange, a.amqpRoutingKey); err != nil {
+	if err = s.amqpClient.PublishJSON(ctx, amqpResponse{Item: item, Exif: exif}, s.amqpExchange, s.amqpRoutingKey); err != nil {
 		return fmt.Errorf("publish amqp message: %s: %w", err, errPublish)
 	}
 

@@ -7,16 +7,16 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
-func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
+func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
 	defer closeWithLog(r.Body, "handlePost", "input")
 
-	exif, err := a.get(r.Context(), r.Body)
+	exif, err := s.get(r.Context(), r.Body)
 	if err != nil {
-		a.increaseMetric(r.Context(), "http", "exif", "error")
+		s.increaseMetric(r.Context(), "http", "exif", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	a.increaseMetric(r.Context(), "http", "exif", "success")
+	s.increaseMetric(r.Context(), "http", "exif", "success")
 	httpjson.Write(w, http.StatusOK, exif)
 }

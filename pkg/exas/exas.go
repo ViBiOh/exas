@@ -29,39 +29,37 @@ var bufferPool = sync.Pool{
 	},
 }
 
-// App of package
-type App struct {
-	storageApp     absto.Storage
+type Service struct {
+	storage        absto.Storage
 	tracer         trace.Tracer
 	amqpClient     *amqp.Client
 	metric         metric.Int64Counter
 	amqpExchange   string
 	amqpRoutingKey string
-	geocodeApp     geocode.App
+	geocode        geocode.Service
 }
 
-// Config of package
 type Config struct {
-	amqpExchange   *string
-	amqpRoutingKey *string
+	AmqpExchange   string
+	AmqpRoutingKey string
 }
 
-// Flags adds flags for configuring package
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		amqpExchange:   flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").String(fs, "fibr", overrides),
-		amqpRoutingKey: flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").String(fs, "exif_output", overrides),
-	}
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
+	var config Config
+
+	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
+	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpRoutingKey, "exif_output", overrides)
+
+	return &config
 }
 
-// New creates new App from Config
-func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client, storageApp absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
-	app := App{
-		geocodeApp:     geocodeApp,
-		storageApp:     storageApp,
+func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client, storageService absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
+	service := Service{
+		geocode:        geocodeService,
+		storage:        storageService,
 		amqpClient:     amqpClient,
-		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
-		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+		amqpExchange:   config.AmqpExchange,
+		amqpRoutingKey: config.AmqpRoutingKey,
 	}
 
 	if meterProvider != nil {
@@ -69,35 +67,34 @@ func New(config Config, geocodeApp geocode.App, amqpClient *amqp.Client, storage
 
 		var err error
 
-		app.metric, err = meter.Int64Counter("exas.item")
+		service.metric, err = meter.Int64Counter("exas.item")
 		if err != nil {
 			slog.Error("create counter", "err", err)
 		}
 	}
 
 	if tracerProvider != nil {
-		app.tracer = tracerProvider.Tracer("exas")
+		service.tracer = tracerProvider.Tracer("exas")
 	}
 
-	return app
+	return service
 }
 
-// Handler for request. Should be use with net/http
-func (a App) Handler() http.Handler {
+func (s Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			a.handlePost(w, r)
+			s.handlePost(w, r)
 		case http.MethodGet:
-			a.handleGet(w, r)
+			s.handleGet(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 }
 
-func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "exiftool")
+func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "exiftool")
 	defer end(&err)
 
 	cmd := exec.Command("./exiftool", "-json", "-")
@@ -133,7 +130,7 @@ func (a App) get(ctx context.Context, input io.Reader) (exif model.Exif, err err
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
-	exif.Geocode, err = a.geocodeApp.GetGeocoding(ctx, exif)
+	exif.Geocode, err = s.geocode.GetGeocoding(ctx, exif)
 	if err != nil {
 		return exif, fmt.Errorf("append geocoding: %w", err)
 	}
