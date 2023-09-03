@@ -43,7 +43,7 @@ Usage of exas:
   --cert                        string    [server] Certificate file ${EXAS_CERT}
   --exchange                    string    [exas] AMQP Exchange Name ${EXAS_EXCHANGE} (default "fibr")
   --geocodeURL                  string    [exif] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") ${EXAS_GEOCODE_URL}
-  --graceDuration               duration  [http] Grace duration when SIGTERM received ${EXAS_GRACE_DURATION} (default 30s)
+  --graceDuration               duration  [http] Grace duration when signal received ${EXAS_GRACE_DURATION} (default 30s)
   --idleTimeout                 duration  [server] Idle Timeout ${EXAS_IDLE_TIMEOUT} (default 2m0s)
   --key                         string    [server] Key file ${EXAS_KEY}
   --loggerJson                            [logger] Log format as JSON ${EXAS_LOGGER_JSON} (default false)
