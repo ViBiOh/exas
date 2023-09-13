@@ -86,7 +86,7 @@ jobs:
           ./download_exiftool
           DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release build
       - name: Setup Docker
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Setup DockerHub
         if: env.DOCKER_USER && env.DOCKER_PASS
         env:
