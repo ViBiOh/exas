@@ -71,7 +71,7 @@ func main() {
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthService := health.New(healthConfig)
+	healthService := health.New(ctx, healthConfig)
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
@@ -98,12 +98,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	go amqphandlerService.Start(healthService.Done(ctx))
-
-	endCtx := healthService.End(ctx)
-
-	go appServer.Start(endCtx, "http", httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
+	go amqphandlerService.Start(healthService.DoneCtx())
+	go appServer.Start(healthService.EndCtx(), "http", httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
 	healthService.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), amqphandlerService.Done())
+
+	appServer.Stop(ctx)
+
+	server.GracefulWait(amqphandlerService.Done())
 }
