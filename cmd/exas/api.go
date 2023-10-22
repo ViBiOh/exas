@@ -99,11 +99,9 @@ func main() {
 	}
 
 	go amqphandlerService.Start(healthService.DoneCtx())
-	go appServer.Start(healthService.EndCtx(), "http", httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
+	go appServer.Start(healthService.EndCtx(), httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
 	healthService.WaitForTermination(appServer.Done())
 
-	appServer.Stop(ctx)
-
-	server.GracefulWait(amqphandlerService.Done())
+	server.GracefulWait(appServer.Done(), amqphandlerService.Done())
 }
