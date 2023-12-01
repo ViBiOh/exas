@@ -39,7 +39,7 @@ spec:
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
-      EXAS_TELEMETRY_URL: otel-collector.observability:4317
+      EXAS_TELEMETRY_URL: datadog.observability:4317
       GOMAXPROCS: "1"
       OTEL_SERVICE_NAME: exas
     secrets:
