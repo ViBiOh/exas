@@ -25,7 +25,7 @@ spec:
     nameOverride: exas
     image:
       name: vibioh/exas
-      tag: "202312012310" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tag: "202312022141" # {"$imagepolicy": "default:flux-exas-api:tag"}
     strategy:
       type: Recreate
     volumes:
