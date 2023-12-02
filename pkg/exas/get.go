@@ -14,20 +14,22 @@ func (s Service) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reader, err := s.storage.ReadFrom(r.Context(), r.URL.Path)
+	ctx := r.Context()
+
+	reader, err := s.storage.ReadFrom(ctx, r.URL.Path)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("read from storage: %w", err))
+		httperror.InternalServerError(ctx, w, fmt.Errorf("read from storage: %w", err))
 		return
 	}
-	defer closeWithLog(reader, "AmqpHandler", r.URL.Path)
+	defer closeWithLog(ctx, reader, "AmqpHandler", r.URL.Path)
 
 	exif, err := s.get(r.Context(), reader)
 	if err != nil {
-		httperror.InternalServerError(w, err)
-		s.increaseMetric(r.Context(), "http", "exif", "error")
+		httperror.InternalServerError(ctx, w, err)
+		s.increaseMetric(ctx, "http", "exif", "error")
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, exif)
-	s.increaseMetric(r.Context(), "http", "exif", "success")
+	httpjson.Write(ctx, w, http.StatusOK, exif)
+	s.increaseMetric(ctx, "http", "exif", "success")
 }

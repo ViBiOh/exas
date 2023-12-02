@@ -59,7 +59,7 @@ func main() {
 
 	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	if err != nil {
-		slog.Error("create telemetry", "err", err)
+		slog.ErrorContext(ctx, "create telemetry", "err", err)
 		os.Exit(1)
 	}
 
@@ -75,7 +75,7 @@ func main() {
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
-		slog.Error("create absto", "err", err)
+		slog.ErrorContext(ctx, "create absto", "err", err)
 		os.Exit(1)
 	}
 
@@ -84,7 +84,7 @@ func main() {
 
 	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
-		slog.Error("create amqp", "err", err)
+		slog.ErrorContext(ctx, "create amqp", "err", err)
 		os.Exit(1)
 	} else if amqpClient != nil {
 		defer amqpClient.Close()
@@ -94,7 +94,7 @@ func main() {
 
 	amqphandlerService, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), exasService.AmqpHandler)
 	if err != nil {
-		slog.Error("create amqp handler", "err", err)
+		slog.ErrorContext(ctx, "create amqp handler", "err", err)
 		os.Exit(1)
 	}
 

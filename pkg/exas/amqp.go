@@ -45,7 +45,7 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 	if err != nil {
 		return fmt.Errorf("read from storage: %w", err)
 	}
-	defer closeWithLog(reader, "AmqpHandler", item.Pathname)
+	defer closeWithLog(ctx, reader, "AmqpHandler", item.Pathname)
 
 	var exif model.Exif
 	exif, err = s.get(ctx, reader)

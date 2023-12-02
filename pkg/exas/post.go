@@ -8,15 +8,17 @@ import (
 )
 
 func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
-	defer closeWithLog(r.Body, "handlePost", "input")
+	ctx := r.Context()
 
-	exif, err := s.get(r.Context(), r.Body)
+	defer closeWithLog(ctx, r.Body, "handlePost", "input")
+
+	exif, err := s.get(ctx, r.Body)
 	if err != nil {
-		s.increaseMetric(r.Context(), "http", "exif", "error")
-		httperror.InternalServerError(w, err)
+		s.increaseMetric(ctx, "http", "exif", "error")
+		httperror.InternalServerError(ctx, w, err)
 		return
 	}
 
-	s.increaseMetric(r.Context(), "http", "exif", "success")
-	httpjson.Write(w, http.StatusOK, exif)
+	s.increaseMetric(ctx, "http", "exif", "success")
+	httpjson.Write(ctx, w, http.StatusOK, exif)
 }

@@ -1,12 +1,13 @@
 package exas
 
 import (
+	"context"
 	"io"
 	"log/slog"
 )
 
-func closeWithLog(closer io.Closer, fn, item string) {
+func closeWithLog(ctx context.Context, closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		slog.Error("close", "err", err, "fn", fn, "item", item)
+		slog.ErrorContext(ctx, "close", "err", err, "fn", fn, "item", item)
 	}
 }
