@@ -69,7 +69,7 @@ func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client
 
 		service.metric, err = meter.Int64Counter("exas.item")
 		if err != nil {
-			slog.Error("create counter", "err", err)
+			slog.Error("create counter", "error", err)
 		}
 	}
 

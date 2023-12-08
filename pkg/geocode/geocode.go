@@ -72,7 +72,7 @@ func New(config *Config, meterProvider metric.MeterProvider, tracerProvider trac
 
 		service.metric, err = meter.Int64Counter("exas.geocode")
 		if err != nil {
-			slog.Error("create geocode counter", "err", err)
+			slog.Error("create geocode counter", "error", err)
 		}
 	}
 
