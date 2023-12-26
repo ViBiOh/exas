@@ -58,10 +58,7 @@ func main() {
 	ctx := context.Background()
 
 	telemetryService, err := telemetry.New(ctx, telemetryConfig)
-	if err != nil {
-		slog.ErrorContext(ctx, "create telemetry", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create telemetry")
 
 	defer telemetryService.Close(ctx)
 
@@ -76,10 +73,7 @@ func main() {
 	healthService := health.New(ctx, healthConfig)
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
-	if err != nil {
-		slog.ErrorContext(ctx, "create absto", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create absto")
 
 	geocodeService := geocode.New(geocodeConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	defer geocodeService.Close()
@@ -95,10 +89,7 @@ func main() {
 	exasService := exas.New(exasConfig, geocodeService, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
 	amqphandlerService, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), exasService.AmqpHandler)
-	if err != nil {
-		slog.ErrorContext(ctx, "create amqp handler", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create amqp handler")
 
 	go amqphandlerService.Start(healthService.DoneCtx())
 	go appServer.Start(healthService.EndCtx(), httputils.Handler(exasService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
