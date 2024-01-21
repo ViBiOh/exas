@@ -8,6 +8,6 @@ import (
 
 func closeWithLog(ctx context.Context, closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		slog.ErrorContext(ctx, "close", "error", err, "fn", fn, "item", item)
+		slog.LogAttrs(ctx, slog.LevelError, "close", slog.String("fn", fn), slog.String("item", item), slog.Any("error", err))
 	}
 }
