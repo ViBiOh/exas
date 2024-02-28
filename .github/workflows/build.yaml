@@ -79,7 +79,7 @@ jobs:
         with:
           path: |
             exiftool
-          key: exiftoolbinaries-12.62
+          key: exiftoolbinaries-12.77
       - name: Build
         run: |
           curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap" | bash -s -- "-c" "release"
