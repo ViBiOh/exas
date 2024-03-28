@@ -2,7 +2,6 @@
 
 [![Build](https://github.com/ViBiOh/exas/workflows/Build/badge.svg)](https://github.com/ViBiOh/exas/actions)
 [![codecov](https://codecov.io/gh/ViBiOh/exas/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/exas)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_exas&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_exas)
 
 ## API
 
