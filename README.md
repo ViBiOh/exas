@@ -1,7 +1,6 @@
 # exas
 
 [![Build](https://github.com/ViBiOh/exas/workflows/Build/badge.svg)](https://github.com/ViBiOh/exas/actions)
-[![codecov](https://codecov.io/gh/ViBiOh/exas/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/exas)
 
 ## API
 
