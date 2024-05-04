@@ -59,6 +59,7 @@ spec:
     config:
       EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
+      EXAS_PPROF_AGENT: http://datadog.observability:8126
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
       EXAS_TELEMETRY_URL: datadog.observability:4317
       OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/exas

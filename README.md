@@ -32,6 +32,7 @@ Usage of exas:
   --address                     string    [server] Listen address ${EXAS_ADDRESS}
   --amqpExchange                string    [amqp] Exchange name ${EXAS_AMQP_EXCHANGE} (default "fibr")
   --amqpExclusive                         [amqp] Queue exclusive mode (for fanout exchange) ${EXAS_AMQP_EXCLUSIVE} (default false)
+  --amqpInactiveTimeout         duration  [amqp] When inactive during the given timeout, stop listening ${EXAS_AMQP_INACTIVE_TIMEOUT} (default 0s)
   --amqpMaxRetry                uint      [amqp] Max send retries ${EXAS_AMQP_MAX_RETRY} (default 3)
   --amqpPrefetch                int       [amqp] Prefetch count for QoS ${EXAS_AMQP_PREFETCH} (default 1)
   --amqpQueue                   string    [amqp] Queue name ${EXAS_AMQP_QUEUE} (default "exas")
@@ -49,8 +50,10 @@ Usage of exas:
   --loggerLevelKey              string    [logger] Key for level in JSON ${EXAS_LOGGER_LEVEL_KEY} (default "level")
   --loggerMessageKey            string    [logger] Key for message in JSON ${EXAS_LOGGER_MESSAGE_KEY} (default "msg")
   --loggerTimeKey               string    [logger] Key for timestamp in JSON ${EXAS_LOGGER_TIME_KEY} (default "time")
+  --name                        string    [server] Name ${EXAS_NAME} (default "http")
   --okStatus                    int       [http] Healthy HTTP Status code ${EXAS_OK_STATUS} (default 204)
   --port                        uint      [server] Listen port (0 to disable) ${EXAS_PORT} (default 1080)
+  --pprofAgent                  string    [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${EXAS_PPROF_AGENT}
   --readTimeout                 duration  [server] Read Timeout ${EXAS_READ_TIMEOUT} (default 2m0s)
   --routingKey                  string    [exas] AMQP Routing Key to fibr ${EXAS_ROUTING_KEY} (default "exif_output")
   --shutdownTimeout             duration  [server] Shutdown Timeout ${EXAS_SHUTDOWN_TIMEOUT} (default 10s)
@@ -65,6 +68,7 @@ Usage of exas:
   --storagePartSize             uint      [storage] PartSize configuration ${EXAS_STORAGE_PART_SIZE} (default 5242880)
   --telemetryRate               string    [telemetry] OpenTelemetry sample rate, 'always', 'never' or a float value ${EXAS_TELEMETRY_RATE} (default "always")
   --telemetryURL                string    [telemetry] OpenTelemetry gRPC endpoint (e.g. otel-exporter:4317) ${EXAS_TELEMETRY_URL}
+  --telemetryUint64                       [telemetry] Change OpenTelemetry Trace ID format to an unsigned int 64 ${EXAS_TELEMETRY_UINT64} (default true)
   --url                         string    [alcotest] URL to check ${EXAS_URL}
   --userAgent                   string    [alcotest] User-Agent for check ${EXAS_USER_AGENT} (default "Alcotest")
   --writeTimeout                duration  [server] Write Timeout ${EXAS_WRITE_TIMEOUT} (default 2m0s)
