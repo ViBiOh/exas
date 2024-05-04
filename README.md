@@ -54,6 +54,7 @@ Usage of exas:
   --okStatus                    int       [http] Healthy HTTP Status code ${EXAS_OK_STATUS} (default 204)
   --port                        uint      [server] Listen port (0 to disable) ${EXAS_PORT} (default 1080)
   --pprofAgent                  string    [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${EXAS_PPROF_AGENT}
+  --pprofPort                   int       [pprof] Port of the HTTP server (0 to disable) ${EXAS_PPROF_PORT} (default 0)
   --readTimeout                 duration  [server] Read Timeout ${EXAS_READ_TIMEOUT} (default 2m0s)
   --routingKey                  string    [exas] AMQP Routing Key to fibr ${EXAS_ROUTING_KEY} (default "exif_output")
   --shutdownTimeout             duration  [server] Shutdown Timeout ${EXAS_SHUTDOWN_TIMEOUT} (default 10s)
