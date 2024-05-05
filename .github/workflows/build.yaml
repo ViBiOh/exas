@@ -64,6 +64,13 @@ jobs:
             exiftool
           key: exiftoolbinaries-12.77
       - name: Build
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+          DD_ENV: production
+          DD_SERVICE: exas
+          DD_SITE: datadoghq.eu
+          PGO_NAME: exas
         run: |
           curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap.sh" | bash -s -- "-c" "release.sh"
           ./download_exiftool
