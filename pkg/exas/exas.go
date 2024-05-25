@@ -127,7 +127,7 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
-	if raw, ok := exif.GetRawCoordinates(); ok {
+	if raw := exif.GetRawCoordinates(); len(raw) != 0 {
 		latLng, err := model.ParseLatLng(raw)
 		if err != nil {
 			return exif, fmt.Errorf("parse latlng: %w", err)
