@@ -57,6 +57,7 @@ spec:
       - name: data
         mountPath: /data
     config:
+      EXAS_GEOCODE_URL: "https://nominatim.openstreetmap.org"
       EXAS_LOGGER_JSON: "true"
       EXAS_PPROF_AGENT: http://datadog.observability:8126
       EXAS_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"

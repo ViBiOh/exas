@@ -10,6 +10,7 @@ import (
 
 	"github.com/ViBiOh/absto/pkg/absto"
 	"github.com/ViBiOh/exas/pkg/exas"
+	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
@@ -36,6 +37,7 @@ func main() {
 	pprofConfig := pprof.Flags(fs, "pprof")
 	exasConfig := exas.Flags(fs, "")
 	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", ""))
+	geocodeConfig := geocode.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
 	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "exas"), flags.NewOverride("RoutingKey", "exif_input"))
@@ -68,6 +70,9 @@ func main() {
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create absto")
 
+	geocodeService := geocode.New(geocodeConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	defer geocodeService.Close()
+
 	amqpClient, err := amqp.New(ctx, amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		slog.LogAttrs(ctx, slog.LevelError, "create amqp", slog.Any("error", err))
@@ -76,7 +81,7 @@ func main() {
 		defer amqpClient.Close(ctx)
 	}
 
-	exasService := exas.New(exasConfig, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	exasService := exas.New(exasConfig, geocodeService, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
 	amqphandlerService, err := amqphandler.New(amqphandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), exasService.AmqpHandler)
 	logger.FatalfOnErr(ctx, err, "create amqp handler")
