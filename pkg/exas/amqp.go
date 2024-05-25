@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
+	"strconv"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
@@ -12,9 +15,16 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+var memLimit int64
+
 type amqpResponse struct {
 	Exif model.Exif `json:"exif"`
 	Item absto.Item `json:"item"`
+}
+
+func init() {
+	rawMemLimit := os.Getenv("GOMEMLIMIT")
+	memLimit, _ = strconv.ParseInt(rawMemLimit, 10, 64)
 }
 
 var (
@@ -39,6 +49,12 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
 		return fmt.Errorf("decode: %s: %w", err, errUnmarshal)
+	}
+
+	if memLimit == 0 || item.Size() < memLimit {
+		slog.LogAttrs(ctx, slog.LevelInfo, fmt.Sprintf("Processing file `%s`", item.Pathname))
+	} else {
+		slog.LogAttrs(ctx, slog.LevelInfo, fmt.Sprintf("Skipping file `%s` due to memory limit", item.Pathname), slog.Int64("size", item.Size()), slog.Int64("limit", memLimit))
 	}
 
 	reader, err := s.storage.ReadFrom(ctx, item.Pathname)
