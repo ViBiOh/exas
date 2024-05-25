@@ -23,8 +23,10 @@ type amqpResponse struct {
 }
 
 func init() {
-	rawMemLimit := os.Getenv("GOMEMLIMIT")
-	memLimit, _ = strconv.ParseInt(rawMemLimit, 10, 64)
+	var err error
+
+	memLimit, err = strconv.ParseInt(os.Getenv("GOMEMLIMIT"), 10, 64)
+	slog.LogAttrs(context.Background(), slog.LevelInfo, fmt.Sprintf("GOMEMLIMIT=%d", memLimit), slog.Any("error", err))
 }
 
 var (
@@ -54,7 +56,7 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 	if memLimit == 0 || item.Size() < memLimit {
 		slog.LogAttrs(ctx, slog.LevelInfo, fmt.Sprintf("Processing file `%s`", item.Pathname))
 	} else {
-		slog.LogAttrs(ctx, slog.LevelInfo, fmt.Sprintf("Skipping file `%s` due to memory limit", item.Pathname), slog.Int64("size", item.Size()), slog.Int64("limit", memLimit))
+		slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Skipping file `%s` due to memory limit", item.Pathname), slog.Int64("size", item.Size()), slog.Int64("limit", memLimit))
 	}
 
 	reader, err := s.storage.ReadFrom(ctx, item.Pathname)
