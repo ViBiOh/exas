@@ -14,7 +14,6 @@ import (
 	"sync"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
-	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
@@ -36,7 +35,6 @@ type Service struct {
 	metric         metric.Int64Counter
 	amqpExchange   string
 	amqpRoutingKey string
-	geocode        geocode.Service
 }
 
 type Config struct {
@@ -53,9 +51,8 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	return &config
 }
 
-func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client, storageService absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
+func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
 	service := Service{
-		geocode:        geocodeService,
 		storage:        storageService,
 		amqpClient:     amqpClient,
 		amqpExchange:   config.AmqpExchange,
@@ -94,10 +91,10 @@ func (s Service) Handler() http.Handler {
 }
 
 func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {
-	ctx, end := telemetry.StartSpan(ctx, s.tracer, "exiftool")
+	_, end := telemetry.StartSpan(ctx, s.tracer, "exiftool")
 	defer end(&err)
 
-	cmd := exec.Command("./exiftool", "-json", "-")
+	cmd := exec.Command("./exiftool", "-json", "--composite", "-api", "geolocation", "-")
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -130,9 +127,13 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
-	exif.Geocode, err = s.geocode.GetGeocoding(ctx, exif)
-	if err != nil {
-		return exif, fmt.Errorf("append geocoding: %w", err)
+	if raw, ok := exif.GetRawCoordinates(); ok {
+		latLng, err := model.ParseLatLng(raw)
+		if err != nil {
+			return exif, fmt.Errorf("parse latlng: %w", err)
+		}
+
+		exif.Coordinates = &latLng
 	}
 
 	return exif, nil
