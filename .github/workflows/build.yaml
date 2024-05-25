@@ -62,7 +62,7 @@ jobs:
         with:
           path: |
             exiftool
-          key: exiftoolbinaries-12.77
+          key: exiftoolbinaries-12.85
       - name: Build
         env:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
