@@ -23,24 +23,12 @@ func (e Exif) HasAddress() bool {
 	return ok
 }
 
-func (e Exif) GetRawCoordinates() string {
-	return e.GetString("GeolocationPosition")
-}
-
-func (e Exif) GetCity() string {
-	return e.GetString("GeolocationCity")
-}
-
-func (e Exif) GetCountry() string {
-	return e.GetString("GeolocationCountry")
-}
-
-func (e Exif) GetString(key string) string {
-	raw, ok := e.Data[key]
+func (e Exif) GetRawCoordinates() (string, bool) {
+	raw, ok := e.Data["GeolocationPosition"]
 	if !ok {
-		return ""
+		return "", false
 	}
 
-	content, _ := raw.(string)
-	return content
+	content, ok := raw.(string)
+	return content, ok
 }
