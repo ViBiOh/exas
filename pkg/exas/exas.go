@@ -97,7 +97,7 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	ctx, end := telemetry.StartSpan(ctx, s.tracer, "exiftool")
 	defer end(&err)
 
-	cmd := exec.Command("./exiftool", "-json", "-")
+	cmd := exec.Command("./exiftool", "-json", "-fast", "-")
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
