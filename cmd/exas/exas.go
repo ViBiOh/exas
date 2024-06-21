@@ -16,7 +16,7 @@ func main() {
 	ctx := context.Background()
 
 	clients, err := newClients(ctx, config)
-	logger.FatalfOnErr(ctx, err, "client")
+	logger.FatalfOnErr(ctx, err, "clients")
 
 	defer clients.Close(ctx)
 	go clients.Start()
@@ -25,7 +25,7 @@ func main() {
 	logger.FatalfOnErr(ctx, err, "adapters")
 
 	services, err := newService(config, clients, adapters)
-	logger.FatalfOnErr(ctx, err, "client")
+	logger.FatalfOnErr(ctx, err, "services")
 
 	defer services.Close()
 	go services.Start(clients.health.DoneCtx())
