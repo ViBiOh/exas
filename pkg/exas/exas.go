@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"os/exec"
 	"strings"
 	"sync"
@@ -78,19 +77,6 @@ func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client
 	}
 
 	return service
-}
-
-func (s Service) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			s.handlePost(w, r)
-		case http.MethodGet:
-			s.handleGet(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
 }
 
 func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err error) {

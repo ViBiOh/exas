@@ -8,7 +8,7 @@ endif
 APP_NAME = exas
 PACKAGES ?= ./...
 
-MAIN_SOURCE = cmd/exas/api.go
+MAIN_SOURCE = ./cmd/exas/
 MAIN_RUNNER = go run $(MAIN_SOURCE)
 ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --

@@ -7,7 +7,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
-func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
+func (s Service) HandlePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	defer closeWithLog(ctx, r.Body, "handlePost", "input")
