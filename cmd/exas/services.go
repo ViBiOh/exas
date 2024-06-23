@@ -10,24 +10,24 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 )
 
-type service struct {
+type services struct {
+	server      *server.Server
 	amqphandler *amqphandler.Service
 	exas        exas.Service
 	geocode     geocode.Service
-	server      server.Server
 }
 
-func newService(config configuration, clients clients, adapters adapters) (*service, error) {
+func newServices(config configuration, clients clients, adapters adapters) (services, error) {
 	geocodeService := geocode.New(config.geocode, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 
 	exasService := exas.New(config.exas, geocodeService, clients.amqp, adapters.storage, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 
 	amqphandlerService, err := amqphandler.New(config.amqphandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), exasService.AmqpHandler)
 	if err != nil {
-		return nil, fmt.Errorf("amqphandler: %w", err)
+		return services{}, fmt.Errorf("amqphandler: %w", err)
 	}
 
-	return &service{
+	return services{
 		exas:        exasService,
 		geocode:     geocodeService,
 		amqphandler: amqphandlerService,
@@ -35,10 +35,10 @@ func newService(config configuration, clients clients, adapters adapters) (*serv
 	}, nil
 }
 
-func (s *service) Start(ctx context.Context) {
-	s.amqphandler.Start(ctx)
+func (s services) Start(ctx context.Context) {
+	go s.amqphandler.Start(ctx)
 }
 
-func (s *service) Close() {
+func (s services) Close() {
 	s.geocode.Close()
 }

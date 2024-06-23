@@ -55,7 +55,7 @@ Usage of exas:
   --port                        uint      [server] Listen port (0 to disable) ${EXAS_PORT} (default 1080)
   --pprofAgent                  string    [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${EXAS_PPROF_AGENT}
   --pprofPort                   int       [pprof] Port of the HTTP server (0 to disable) ${EXAS_PPROF_PORT} (default 0)
-  --readTimeout                 duration  [server] Read Timeout ${EXAS_READ_TIMEOUT} (default 2m0s)
+  --readTimeout                 duration  [server] Read Timeout ${EXAS_READ_TIMEOUT} (default 5s)
   --routingKey                  string    [exas] AMQP Routing Key to fibr ${EXAS_ROUTING_KEY} (default "exif_output")
   --shutdownTimeout             duration  [server] Shutdown Timeout ${EXAS_SHUTDOWN_TIMEOUT} (default 10s)
   --storageFileSystemDirectory  /data     [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. ${EXAS_STORAGE_FILE_SYSTEM_DIRECTORY}
@@ -72,5 +72,5 @@ Usage of exas:
   --telemetryUint64                       [telemetry] Change OpenTelemetry Trace ID format to an unsigned int 64 ${EXAS_TELEMETRY_UINT64} (default true)
   --url                         string    [alcotest] URL to check ${EXAS_URL}
   --userAgent                   string    [alcotest] User-Agent for check ${EXAS_USER_AGENT} (default "Alcotest")
-  --writeTimeout                duration  [server] Write Timeout ${EXAS_WRITE_TIMEOUT} (default 2m0s)
+  --writeTimeout                duration  [server] Write Timeout ${EXAS_WRITE_TIMEOUT} (default 10s)
 ```

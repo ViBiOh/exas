@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-func newPort(service *service) http.Handler {
+func newPort(service services) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /", service.exas.HandleGet)
