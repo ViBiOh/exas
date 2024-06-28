@@ -18,21 +18,20 @@ type services struct {
 }
 
 func newServices(config configuration, clients clients, adapters adapters) (services, error) {
-	geocodeService := geocode.New(config.geocode, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
+	var output services
+	var err error
 
-	exasService := exas.New(config.exas, geocodeService, clients.amqp, adapters.storage, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
+	output.server = server.New(config.server)
 
-	amqphandlerService, err := amqphandler.New(config.amqphandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), exasService.AmqpHandler)
+	output.geocode = geocode.New(config.geocode, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
+	output.exas = exas.New(config.exas, output.geocode, clients.amqp, adapters.storage, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
+
+	output.amqphandler, err = amqphandler.New(config.amqphandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), output.exas.AmqpHandler)
 	if err != nil {
-		return services{}, fmt.Errorf("amqphandler: %w", err)
+		return output, fmt.Errorf("amqphandler: %w", err)
 	}
 
-	return services{
-		exas:        exasService,
-		geocode:     geocodeService,
-		amqphandler: amqphandlerService,
-		server:      server.New(config.server),
-	}, nil
+	return output, nil
 }
 
 func (s services) Start(ctx context.Context) {

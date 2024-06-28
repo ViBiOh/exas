@@ -1,12 +1,18 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func newPort(service services) http.Handler {
+	"github.com/ViBiOh/httputils/v4/pkg/httputils"
+)
+
+func newPort(clients clients, services services) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", service.exas.HandleGet)
-	mux.HandleFunc("POST /", service.exas.HandlePost)
+	mux.HandleFunc("GET /", services.exas.HandleGet)
+	mux.HandleFunc("POST /", services.exas.HandlePost)
 
-	return mux
+	return httputils.Handler(mux, clients.health,
+		clients.telemetry.Middleware("http"),
+	)
 }
