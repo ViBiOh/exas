@@ -212,15 +212,14 @@ func (s Service) getReverseGeocode(ctx context.Context, geocode model.Geocode) (
 
 	s.increaseMetric(ctx, "requested")
 
-	var reverseGeo reverseGeocodeResponse
-
 	resp, err := s.geocodeReq.Path("/reverse?%s", params.Encode()).Send(ctx, nil)
 	if err != nil {
 		s.increaseMetric(ctx, "api_error")
 		return geocode, fmt.Errorf("get reverse geocoding: %w", err)
 	}
 
-	if err = httpjson.Read(resp, &reverseGeo); err != nil {
+	reverseGeo, err := httpjson.Read[reverseGeocodeResponse](resp)
+	if err != nil {
 		s.increaseMetric(ctx, "decode_error")
 		return geocode, fmt.Errorf("decode reverse geocoding: %w", err)
 	}
