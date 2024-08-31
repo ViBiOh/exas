@@ -140,7 +140,7 @@ func handleExifToolErr(err error, buffer *bytes.Buffer) error {
 
 	if len(toolErrs) > 0 && toolErrs[0].Error == "Unknown file type" {
 		buffer.Reset()
-		buffer.WriteString("{}")
+		buffer.WriteString("[{}]")
 
 		return nil
 	}
