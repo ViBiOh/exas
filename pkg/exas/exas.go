@@ -28,6 +28,10 @@ var bufferPool = sync.Pool{
 	},
 }
 
+type exiftoolErrors []struct {
+	Error string `json:"Error"`
+}
+
 type Service struct {
 	storage        absto.Storage
 	tracer         trace.Tracer
@@ -93,8 +97,8 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err := cmd.Run(); err != nil {
-		return exif, fmt.Errorf("extract exif `%s`: %w", buffer.String(), err)
+	if err := handleExifToolErr(cmd.Run(), buffer); err != nil {
+		return exif, err
 	}
 
 	var exifs []map[string]any
@@ -122,4 +126,24 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	}
 
 	return exif, nil
+}
+
+func handleExifToolErr(err error, buffer *bytes.Buffer) error {
+	if err == nil {
+		return nil
+	}
+
+	var toolErrs exiftoolErrors
+	stderr := buffer.Bytes()
+
+	_ = json.Unmarshal(stderr, &toolErrs)
+
+	if len(toolErrs) > 0 && toolErrs[0].Error == "Unknown file type" {
+		buffer.Reset()
+		buffer.WriteString("{}")
+
+		return nil
+	}
+
+	return fmt.Errorf("extract exif `%s`: %w", stderr, err)
 }
