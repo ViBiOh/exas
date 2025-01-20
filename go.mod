@@ -9,9 +9,9 @@ require (
 	github.com/ViBiOh/flags v1.6.0
 	github.com/ViBiOh/httputils/v4 v4.81.4
 	github.com/rabbitmq/amqp091-go v1.10.0
-	go.opentelemetry.io/otel v1.33.0
-	go.opentelemetry.io/otel/metric v1.33.0
-	go.opentelemetry.io/otel/trace v1.33.0
+	go.opentelemetry.io/otel v1.34.0
+	go.opentelemetry.io/otel/metric v1.34.0
+	go.opentelemetry.io/otel/trace v1.34.0
 )
 
 require (
