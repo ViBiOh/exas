@@ -25,11 +25,11 @@ spec:
     nameOverride: exas
     image:
       name: rg.fr-par.scw.cloud/vibioh/exas
-      tag: "202504072152" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tag: "202504072206" # {"$imagepolicy": "default:flux-exas-api:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "exas"
-      tags.datadoghq.com/version: "202504072152" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tags.datadoghq.com/version: "202504072206" # {"$imagepolicy": "default:flux-exas-api:tag"}
     env:
       - name: GOMAXPROCS
         valueFrom:
