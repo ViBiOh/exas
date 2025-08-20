@@ -31,10 +31,6 @@ spec:
       tags.datadoghq.com/service: "exas"
       tags.datadoghq.com/version: "202509010904" # {"$imagepolicy": "default:flux-exas-api:tag"}
     env:
-      - name: GOMAXPROCS
-        valueFrom:
-          resourceFieldRef:
-            resource: limits.cpu
       - name: GOMEMLIMIT
         valueFrom:
           resourceFieldRef:
