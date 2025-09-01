@@ -1,12 +1,10 @@
 module github.com/ViBiOh/exas
 
-go 1.24
-
-toolchain go1.24.0
+go 1.25
 
 require (
 	github.com/ViBiOh/absto v1.7.27
-	github.com/ViBiOh/flags v1.6.0
+	github.com/ViBiOh/flags v1.6.1
 	github.com/ViBiOh/httputils/v4 v4.82.5
 	github.com/rabbitmq/amqp091-go v1.10.0
 	go.opentelemetry.io/otel v1.37.0
