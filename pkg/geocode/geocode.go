@@ -105,7 +105,7 @@ func (s Service) GetGeocoding(ctx context.Context, exif model.Exif) (geocode mod
 	}
 
 	if !s.Enabled() {
-		return
+		return geocode, err
 	}
 
 	if s.ticker != nil {
