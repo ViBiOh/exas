@@ -58,7 +58,7 @@ jobs:
           go-version: "^1.25"
           cache: true
       - name: Cache exiftool binaries
-        uses: actions/cache@v4.3.0
+        uses: actions/cache@v5.0.0
         with:
           path: |
             exiftool
