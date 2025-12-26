@@ -2,7 +2,7 @@ FROM perl:slim
 
 EXPOSE 1080
 
-HEALTHCHECK --retries=10 CMD [ "/exas", "-url", "http://localhost:1080/health" ]
+HEALTHCHECK --retries=10 CMD [ "/exas", "-url", "http://127.0.0.1:1080/health" ]
 ENTRYPOINT [ "/exas" ]
 
 ARG APP_VERSION
