@@ -25,11 +25,11 @@ spec:
     nameOverride: exas
     image:
       name: rg.fr-par.scw.cloud/vibioh/exas
-      tag: "202512300000" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tag: "202512302233" # {"$imagepolicy": "default:flux-exas-api:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "exas"
-      tags.datadoghq.com/version: "202512300000" # {"$imagepolicy": "default:flux-exas-api:tag"}
+      tags.datadoghq.com/version: "202512302233" # {"$imagepolicy": "default:flux-exas-api:tag"}
     env:
       - name: GOMEMLIMIT
         valueFrom:
