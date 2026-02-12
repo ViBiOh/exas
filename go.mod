@@ -1,8 +1,8 @@
 module github.com/ViBiOh/exas
 
-go 1.25
+go 1.26
 
-toolchain go1.25.0
+toolchain go1.26.0
 
 require (
 	github.com/ViBiOh/absto v1.7.29
