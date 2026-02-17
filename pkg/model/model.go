@@ -3,9 +3,9 @@ package model
 import "time"
 
 type Exif struct {
-	Date    time.Time      `json:"date,omitempty"`
+	Date    time.Time      `json:"date"`
 	Data    map[string]any `json:"data,omitempty"`
-	Geocode Geocode        `json:"geocode,omitempty"`
+	Geocode Geocode        `json:"geocode"`
 }
 
 func (e Exif) IsZero() bool {
