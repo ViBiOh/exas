@@ -4,6 +4,8 @@ kind: PersistentVolume
 metadata:
   name: exas
   namespace: default
+  labels:
+    app: "exas"
 spec:
   capacity:
     storage: 30Gi
@@ -32,6 +34,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: custom-local-storage
+  selector:
+    matchLabels:
+      app: "exas"
   resources:
     requests:
       storage: 30Gi
