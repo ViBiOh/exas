@@ -17,5 +17,5 @@ COPY exiftool/ .
 
 COPY wait_${TARGETOS}_${TARGETARCH} /wait
 
-COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY cacert.pem /etc/ssl/cert.pem
 COPY release/exas_${TARGETOS}_${TARGETARCH} /exas
