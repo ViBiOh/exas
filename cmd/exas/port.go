@@ -12,7 +12,8 @@ func newPort(clients clients, services services) http.Handler {
 	mux.HandleFunc("GET /", services.exas.HandleGet)
 	mux.HandleFunc("POST /", services.exas.HandlePost)
 
-	return httputils.Handler(mux, clients.health,
+	return httputils.Handler(
+		mux, clients.health,
 		clients.telemetry.Middleware("http"),
 	)
 }
