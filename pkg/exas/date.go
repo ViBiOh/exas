@@ -6,9 +6,12 @@ import (
 	"github.com/ViBiOh/exas/pkg/model"
 )
 
-var (
+const (
 	offsetTimeName = "OffsetTime"
+	tzPattern      = "2006:01:02 15:04:05Z07:00"
+)
 
+var (
 	exifDates = []string{
 		"GPSDateTime",
 		"SubSecDateTimeOriginal",
@@ -18,8 +21,6 @@ var (
 		"CreationDate",
 		"CreateDate",
 	}
-
-	tzPattern = "2006:01:02 15:04:05Z07:00"
 
 	datePatterns = []string{
 		"2006:01:02 15:04:05",

@@ -26,17 +26,14 @@ func (s Service) handleMetric(ctx context.Context, source, kind string, err erro
 		return
 	}
 
-	if errors.Is(err, errNoAccess) {
+	switch {
+	case errors.Is(err, errNoAccess):
 		s.increaseMetric(ctx, source, kind, "no_access")
-	} else if errors.Is(err, errUnmarshal) {
+	case errors.Is(err, errUnmarshal):
 		s.increaseMetric(ctx, source, kind, "unmarshal_error")
-	} else if errors.Is(err, errInvalidPath) {
-		s.increaseMetric(ctx, source, kind, "invalid_path")
-	} else if errors.Is(err, errNotFound) {
-		s.increaseMetric(ctx, source, kind, "not_found")
-	} else if errors.Is(err, errExtract) {
+	case errors.Is(err, errExtract):
 		s.increaseMetric(ctx, source, kind, "error")
-	} else if errors.Is(err, errPublish) {
+	case errors.Is(err, errPublish):
 		s.increaseMetric(ctx, source, kind, "publish_error")
 	}
 }

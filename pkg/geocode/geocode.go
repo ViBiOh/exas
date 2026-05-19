@@ -108,11 +108,11 @@ func (s Service) GetGeocoding(ctx context.Context, exif model.Exif) (geocode mod
 		return geocode, err
 	}
 
-	if s.ticker != nil {
-		<-s.ticker.C
-	}
-
 	if geocode.HasCoordinates() {
+		if s.ticker != nil {
+			<-s.ticker.C
+		}
+
 		if geocode, err = s.getReverseGeocode(ctx, geocode); err != nil {
 			return geocode, fmt.Errorf("reverse geocode: %w", err)
 		}
@@ -170,12 +170,10 @@ func getCoordinate(data map[string]any, key string) (float64, error) {
 }
 
 func convertDegreeMinuteSecondToDecimal(location string) (float64, error) {
-	matches := gpsRegex.FindAllStringSubmatch(location, -1)
-	if len(matches) == 0 {
+	match := gpsRegex.FindStringSubmatch(location)
+	if len(match) == 0 {
 		return 0, fmt.Errorf("parse GPS data `%s`", location)
 	}
-
-	match := matches[0]
 
 	degrees, err := strconv.ParseFloat(match[1], 32)
 	if err != nil {

@@ -18,16 +18,14 @@ type amqpResponse struct {
 }
 
 var (
-	errNoAccess    = errors.New("exas has no direct access to filesystem")
-	errUnmarshal   = errors.New("unmarshal error")
-	errInvalidPath = errors.New("invalid path")
-	errNotFound    = errors.New("not found")
-	errExtract     = errors.New("extract error")
-	errPublish     = errors.New("publish error")
+	errNoAccess  = errors.New("exas has no direct access to filesystem")
+	errUnmarshal = errors.New("unmarshal error")
+	errExtract   = errors.New("extract error")
+	errPublish   = errors.New("publish error")
 )
 
 func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
-	defer s.handleMetric(ctx, "amqp", "exif", err)
+	defer func() { s.handleMetric(ctx, "amqp", "exif", err) }()
 
 	if !s.storage.Enabled() {
 		return errNoAccess
@@ -38,7 +36,7 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
-		return fmt.Errorf("decode: %s: %w", err, errUnmarshal)
+		return errors.Join(fmt.Errorf("decode: %w", err), errUnmarshal)
 	}
 
 	reader, err := s.storage.ReadFrom(ctx, item.Pathname)
@@ -50,11 +48,11 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 	var exif model.Exif
 	exif, err = s.get(ctx, reader)
 	if err != nil {
-		return fmt.Errorf("get exif: %s: %w", err, errExtract)
+		return errors.Join(fmt.Errorf("get exif: %w", err), errExtract)
 	}
 
 	if err = s.amqpClient.PublishJSON(ctx, amqpResponse{Item: item, Exif: exif}, s.amqpExchange, s.amqpRoutingKey); err != nil {
-		return fmt.Errorf("publish amqp message: %s: %w", err, errPublish)
+		return errors.Join(fmt.Errorf("publish amqp message: %w", err), errPublish)
 	}
 
 	return nil

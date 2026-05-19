@@ -10,6 +10,8 @@ import (
 const float64EqualityThreshold = 0.000001
 
 func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		location string
 	}
@@ -44,22 +46,21 @@ func TestConvertDegreeMinuteSecondToDecimal(t *testing.T) {
 
 	for intention, tc := range cases {
 		t.Run(intention, func(t *testing.T) {
+			t.Parallel()
+
 			got, gotErr := convertDegreeMinuteSecondToDecimal(tc.args.location)
 
-			failed := false
-
-			if tc.wantErr == nil && gotErr != nil {
-				failed = true
-			} else if tc.wantErr != nil && gotErr == nil {
-				failed = true
-			} else if tc.wantErr != nil && !strings.Contains(gotErr.Error(), tc.wantErr.Error()) {
-				failed = true
-			} else if math.Abs(got-tc.want) > float64EqualityThreshold {
-				failed = true
+			switch {
+			case tc.wantErr == nil && gotErr != nil:
+				t.Errorf("unexpected error: %s", gotErr)
+			case tc.wantErr != nil && gotErr == nil:
+				t.Errorf("expected error containing %q, got nil", tc.wantErr)
+			case tc.wantErr != nil && !strings.Contains(gotErr.Error(), tc.wantErr.Error()):
+				t.Errorf("error = %q, want containing %q", gotErr, tc.wantErr)
 			}
 
-			if failed {
-				t.Errorf("convertDegreeMinuteSecondToDecimal() = (%f, `%s`), want (%f, `%s`)", got, gotErr, tc.want, tc.wantErr)
+			if math.Abs(got-tc.want) > float64EqualityThreshold {
+				t.Errorf("result = %f, want %f", got, tc.want)
 			}
 		})
 	}

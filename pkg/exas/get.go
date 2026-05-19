@@ -21,7 +21,7 @@ func (s Service) HandleGet(w http.ResponseWriter, r *http.Request) {
 		httperror.InternalServerError(ctx, w, fmt.Errorf("read from storage: %w", err))
 		return
 	}
-	defer closeWithLog(ctx, reader, "AmqpHandler", r.URL.Path)
+	defer closeWithLog(ctx, reader, "HandleGet", r.URL.Path)
 
 	exif, err := s.get(r.Context(), reader)
 	if err != nil {
