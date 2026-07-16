@@ -26,13 +26,15 @@ main() {
 
   var_info "Downloading exiftool"
 
-  local EXIF_VERSION="13.59"
+  local EXIF_VERSION
+  EXIF_VERSION="$(curl --disable --silent --show-error --location --max-time 600 "https://exiftool.org/ver.txt")"
+
   local EXIF_ARCHIVE_NAME="Image-ExifTool-${EXIF_VERSION}.tar.gz"
 
-  curl --disable --silent --show-error --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "https://exiftool.org/${EXIF_ARCHIVE_NAME}"
+  curl --disable --silent --show-error --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "http://downloads.sourceforge.net/project/exiftool/${EXIF_ARCHIVE_NAME}"
   tar --extract --gzip --file "${EXIF_ARCHIVE_NAME}"
   rm "${EXIF_ARCHIVE_NAME}"
   mv "Image-ExifTool-${EXIF_VERSION}" "${TARGET_NAME}"
 }
 
-main "${@}"
+main "${@:-}"
