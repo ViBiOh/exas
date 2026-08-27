@@ -1,6 +1,6 @@
 module github.com/ViBiOh/exas
 
-go 1.26.0
+go 1.27.0
 
 require (
 	github.com/ViBiOh/absto v1.7.35
