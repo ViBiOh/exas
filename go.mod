@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/ViBiOh/absto v1.7.35
 	github.com/ViBiOh/flags v1.6.1
-	github.com/ViBiOh/httputils/v4 v4.88.3
+	github.com/ViBiOh/httputils/v4 v4.88.4
 	github.com/rabbitmq/amqp091-go v1.14.0
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/metric v1.45.0
@@ -50,9 +50,9 @@ require (
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/tools v0.49.1-0.20260819203639-c62e53519fb7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260810153831-ec0a7760b754 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260810153831-ec0a7760b754 // indirect
-	google.golang.org/grpc v1.83.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
+	google.golang.org/grpc v1.83.1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	mvdan.cc/gofumpt v0.11.0 // indirect
