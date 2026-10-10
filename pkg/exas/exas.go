@@ -9,8 +9,10 @@ import (
 	"io"
 	"log/slog"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/geocode"
@@ -20,6 +22,11 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+)
+
+const (
+	defaultExiftool   = "./exiftool"
+	exiftoolWaitDelay = 5 * time.Second
 )
 
 var bufferPool = sync.Pool{
@@ -37,6 +44,8 @@ type Service struct {
 	tracer         trace.Tracer
 	amqpClient     *amqp.Client
 	metric         metric.Int64Counter
+	limiter        chan struct{}
+	exiftool       string
 	amqpExchange   string
 	amqpRoutingKey string
 	geocode        geocode.Service
@@ -45,6 +54,7 @@ type Service struct {
 type Config struct {
 	AmqpExchange   string
 	AmqpRoutingKey string
+	MaxProcess     int
 }
 
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
@@ -52,6 +62,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 
 	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
 	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpRoutingKey, "exif_output", overrides)
+	flags.New("MaxProcess", "Maximum number of concurrent exiftool processes").Prefix(prefix).DocPrefix("exas").IntVar(fs, &config.MaxProcess, runtime.GOMAXPROCS(0), overrides)
 
 	return &config
 }
@@ -61,6 +72,8 @@ func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client
 		geocode:        geocodeService,
 		storage:        storageService,
 		amqpClient:     amqpClient,
+		limiter:        make(chan struct{}, max(config.MaxProcess, 1)),
+		exiftool:       defaultExiftool,
 		amqpExchange:   config.AmqpExchange,
 		amqpRoutingKey: config.AmqpRoutingKey,
 	}
@@ -87,17 +100,12 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	ctx, end := telemetry.StartSpan(ctx, s.tracer, "exiftool")
 	defer end(&err)
 
-	cmd := exec.Command("./exiftool", "-json", "-")
-
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
-	cmd.Stdin = input
-	cmd.Stdout = buffer
-	cmd.Stderr = buffer
 
-	if err := handleExifToolErr(cmd.Run(), buffer); err != nil {
+	if err := s.runExiftool(ctx, input, buffer); err != nil {
 		return exif, err
 	}
 
@@ -126,6 +134,28 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	}
 
 	return exif, nil
+}
+
+func (s Service) runExiftool(ctx context.Context, input io.Reader, output *bytes.Buffer) error {
+	select {
+	case s.limiter <- struct{}{}:
+		defer func() { <-s.limiter }()
+	case <-ctx.Done():
+		return fmt.Errorf("waiting for exiftool slot: %w", ctx.Err())
+	}
+
+	cmd := exec.CommandContext(ctx, s.exiftool, "-json", "-")
+	cmd.WaitDelay = exiftoolWaitDelay
+	cmd.Stdin = input
+	cmd.Stdout = output
+	cmd.Stderr = output
+
+	runErr := cmd.Run()
+	if runErr != nil && ctx.Err() != nil {
+		return fmt.Errorf("run exiftool: %w", ctx.Err())
+	}
+
+	return handleExifToolErr(runErr, output)
 }
 
 func handleExifToolErr(err error, buffer *bytes.Buffer) error {

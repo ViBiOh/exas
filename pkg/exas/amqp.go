@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const amqpHandleTimeout = time.Minute
 
 type amqpResponse struct {
 	Exif model.Exif `json:"exif"`
@@ -30,6 +33,9 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 	if !s.storage.Enabled() {
 		return errNoAccess
 	}
+
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), amqpHandleTimeout)
+	defer cancel()
 
 	ctx, end := telemetry.StartSpan(ctx, s.tracer, "amqp")
 	defer end(&err)

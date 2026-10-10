@@ -7,6 +7,7 @@ require (
 	github.com/ViBiOh/flags v1.6.1
 	github.com/ViBiOh/httputils/v4 v4.89.2
 	github.com/rabbitmq/amqp091-go v1.15.0
+	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/metric v1.47.0
 	go.opentelemetry.io/otel/trace v1.47.0

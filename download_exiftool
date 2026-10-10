@@ -14,6 +14,14 @@ script_dir() {
   fi
 }
 
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${1}" | awk '{print $1}'
+  else
+    shasum --algorithm 256 "${1}" | awk '{print $1}'
+  fi
+}
+
 main() {
   source "$(script_dir)/scripts/meta" && meta_check "var"
 
@@ -27,11 +35,31 @@ main() {
   var_info "Downloading exiftool"
 
   local EXIF_VERSION
-  EXIF_VERSION="$(curl --disable --silent --show-error --location --max-time 600 "https://exiftool.org/ver.txt")"
+  EXIF_VERSION="$(curl --disable --silent --show-error --fail --location --max-time 600 "https://exiftool.org/ver.txt")"
+
+  if [[ ! ${EXIF_VERSION} =~ ^[0-9]+\.[0-9]+$ ]]; then
+    printf -- "Unexpected exiftool version '%s'\n" "${EXIF_VERSION}" >&2
+    return 1
+  fi
 
   local EXIF_ARCHIVE_NAME="Image-ExifTool-${EXIF_VERSION}.tar.gz"
 
-  curl --disable --silent --show-error --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "http://downloads.sourceforge.net/project/exiftool/${EXIF_ARCHIVE_NAME}"
+  local EXPECTED_SHA
+  EXPECTED_SHA="$(curl --disable --silent --show-error --fail --location --max-time 600 "https://exiftool.org/checksums-${EXIF_VERSION}.txt" | sed -n "s/^SHA2-256(${EXIF_ARCHIVE_NAME//./\\.})= //p")"
+
+  if [[ ! ${EXPECTED_SHA} =~ ^[0-9a-f]{64}$ ]]; then
+    printf -- "Unable to find SHA2-256 checksum of '%s'\n" "${EXIF_ARCHIVE_NAME}" >&2
+    return 1
+  fi
+
+  curl --disable --silent --show-error --fail --location --max-time 600 --output "${EXIF_ARCHIVE_NAME}" "https://downloads.sourceforge.net/project/exiftool/${EXIF_ARCHIVE_NAME}"
+
+  if [[ $(sha256_of "${EXIF_ARCHIVE_NAME}") != "${EXPECTED_SHA}" ]]; then
+    rm "${EXIF_ARCHIVE_NAME}"
+    printf -- "Checksum mismatch for '%s'\n" "${EXIF_ARCHIVE_NAME}" >&2
+    return 1
+  fi
+
   tar --extract --gzip --file "${EXIF_ARCHIVE_NAME}"
   rm "${EXIF_ARCHIVE_NAME}"
   mv "Image-ExifTool-${EXIF_VERSION}" "${TARGET_NAME}"

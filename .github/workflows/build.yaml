@@ -61,12 +61,16 @@ jobs:
         with:
           go-version: "1.27"
           cache: true
+      - name: Resolve exiftool version
+        id: exiftool
+        run: |
+          printf "version=%s\n" "$(curl --disable --silent --show-error --fail --location --max-time 30 "https://exiftool.org/ver.txt")" >> "${GITHUB_OUTPUT}"
       - name: Cache exiftool binaries
         uses: actions/cache@v6.1.0
         with:
           path: |
             exiftool
-          key: exiftoolbinaries-12.85
+          key: exiftoolbinaries-${{ steps.exiftool.outputs.version }}
       - name: Build
         run: |
           curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap.sh" | bash -s -- "-c" "release.sh"

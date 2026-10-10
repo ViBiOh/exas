@@ -48,6 +48,7 @@ Usage of exas:
   --loggerLevelKey              string    [logger] Key for level in JSON ${EXAS_LOGGER_LEVEL_KEY} (default "level")
   --loggerMessageKey            string    [logger] Key for message in JSON ${EXAS_LOGGER_MESSAGE_KEY} (default "msg")
   --loggerTimeKey               string    [logger] Key for timestamp in JSON ${EXAS_LOGGER_TIME_KEY} (default "time")
+  --maxProcess                  int       [exas] Maximum number of concurrent exiftool processes ${EXAS_MAX_PROCESS} (default GOMAXPROCS)
   --name                        string    [server] Name ${EXAS_NAME} (default "http")
   --okStatus                    int       [http] Healthy HTTP Status code ${EXAS_OK_STATUS} (default 204)
   --port                        uint      [server] Listen port (0 to disable) ${EXAS_PORT} (default 1080)
