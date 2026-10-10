@@ -17,7 +17,7 @@ func main() {
 	clients, err := newClients(ctx, config)
 	logger.FatalfOnErr(ctx, err, "clients")
 
-	go clients.Start()
+	clients.Start()
 	defer clients.Close(ctx)
 
 	adapters, err := newAdapters(config, clients)

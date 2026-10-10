@@ -13,12 +13,12 @@ func (s Service) HandlePost(w http.ResponseWriter, r *http.Request) {
 	defer closeWithLog(ctx, r.Body, "handlePost", "input")
 
 	exif, err := s.get(ctx, r.Body)
+	s.handleMetric(ctx, "http", err)
+
 	if err != nil {
-		s.increaseMetric(ctx, "http", "exif", "error")
 		httperror.InternalServerError(ctx, w, err)
 		return
 	}
 
-	s.increaseMetric(ctx, "http", "exif", "success")
 	httpjson.Write(ctx, w, http.StatusOK, exif)
 }

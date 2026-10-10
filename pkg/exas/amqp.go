@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
@@ -21,19 +22,26 @@ type amqpResponse struct {
 }
 
 var (
-	errNoAccess  = errors.New("exas has no direct access to filesystem")
 	errUnmarshal = errors.New("unmarshal error")
-	errExtract   = errors.New("extract error")
+	errRead      = errors.New("read error")
 	errPublish   = errors.New("publish error")
 )
 
-func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err error) {
-	defer func() { s.handleMetric(ctx, "amqp", "exif", err) }()
+func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) error {
+	err := s.handleAmqp(ctx, message)
 
-	if !s.storage.Enabled() {
-		return errNoAccess
+	s.handleMetric(ctx, "amqp", err)
+
+	if errors.Is(err, errUnmarshal) {
+		slog.LogAttrs(ctx, slog.LevelError, "drop undecodable amqp message", slog.String("body", string(message.Body)), slog.Any("error", err))
+
+		return nil
 	}
 
+	return err
+}
+
+func (s Service) handleAmqp(ctx context.Context, message amqp.Delivery) (err error) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), amqpHandleTimeout)
 	defer cancel()
 
@@ -42,23 +50,22 @@ func (s Service) AmqpHandler(ctx context.Context, message amqp.Delivery) (err er
 
 	var item absto.Item
 	if err = json.Unmarshal(message.Body, &item); err != nil {
-		return errors.Join(fmt.Errorf("decode: %w", err), errUnmarshal)
+		return fmt.Errorf("%w: decode: %w", errUnmarshal, err)
 	}
 
 	reader, err := s.storage.ReadFrom(ctx, item.Pathname)
 	if err != nil {
-		return fmt.Errorf("read from storage: %w", err)
+		return fmt.Errorf("%w: read from storage: %w", errRead, err)
 	}
 	defer closeWithLog(ctx, reader, "AmqpHandler", item.Pathname)
 
-	var exif model.Exif
-	exif, err = s.get(ctx, reader)
+	exif, err := s.get(ctx, reader)
 	if err != nil {
-		return errors.Join(fmt.Errorf("get exif: %w", err), errExtract)
+		return fmt.Errorf("get exif: %w", err)
 	}
 
 	if err = s.amqpClient.PublishJSON(ctx, amqpResponse{Item: item, Exif: exif}, s.amqpExchange, s.amqpRoutingKey); err != nil {
-		return errors.Join(fmt.Errorf("publish amqp message: %w", err), errPublish)
+		return fmt.Errorf("%w: publish amqp message: %w", errPublish, err)
 	}
 
 	return nil

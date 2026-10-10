@@ -27,6 +27,7 @@ import (
 const (
 	defaultExiftool   = "./exiftool"
 	exiftoolWaitDelay = 5 * time.Second
+	maxPooledBuffer   = 1 << 20
 )
 
 var bufferPool = sync.Pool{
@@ -54,6 +55,7 @@ type Service struct {
 type Config struct {
 	AmqpExchange   string
 	AmqpRoutingKey string
+	Exiftool       string
 	MaxProcess     int
 }
 
@@ -62,6 +64,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 
 	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
 	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpRoutingKey, "exif_output", overrides)
+	flags.New("Exiftool", "Path to the exiftool executable").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.Exiftool, defaultExiftool, overrides)
 	flags.New("MaxProcess", "Maximum number of concurrent exiftool processes").Prefix(prefix).DocPrefix("exas").IntVar(fs, &config.MaxProcess, runtime.GOMAXPROCS(0), overrides)
 
 	return &config
@@ -73,7 +76,7 @@ func New(config *Config, geocodeService geocode.Service, amqpClient *amqp.Client
 		storage:        storageService,
 		amqpClient:     amqpClient,
 		limiter:        make(chan struct{}, max(config.MaxProcess, 1)),
-		exiftool:       defaultExiftool,
+		exiftool:       config.Exiftool,
 		amqpExchange:   config.AmqpExchange,
 		amqpRoutingKey: config.AmqpRoutingKey,
 	}
@@ -101,7 +104,7 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	defer end(&err)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
+	defer putBuffer(buffer)
 
 	buffer.Reset()
 
@@ -128,15 +131,29 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	exif.Data = exifData
 	exif.Date = getDate(exif)
 
-	exif.Geocode, err = s.geocode.GetGeocoding(ctx, exif)
-	if err != nil {
-		return exif, fmt.Errorf("append geocoding: %w", err)
+	geocoding, geocodeErr := s.geocode.GetGeocoding(ctx, exif)
+	if geocodeErr != nil {
+		if ctx.Err() != nil {
+			return exif, fmt.Errorf("append geocoding: %w", geocodeErr)
+		}
+
+		slog.LogAttrs(ctx, slog.LevelWarn, "append geocoding", slog.Any("error", geocodeErr))
 	}
+
+	exif.Geocode = geocoding
 
 	return exif, nil
 }
 
-func (s Service) runExiftool(ctx context.Context, input io.Reader, output *bytes.Buffer) error {
+func putBuffer(buffer *bytes.Buffer) {
+	if buffer.Cap() > maxPooledBuffer {
+		return
+	}
+
+	bufferPool.Put(buffer)
+}
+
+func (s Service) runExiftool(ctx context.Context, input io.Reader, stdout *bytes.Buffer) error {
 	select {
 	case s.limiter <- struct{}{}:
 		defer func() { <-s.limiter }()
@@ -147,32 +164,36 @@ func (s Service) runExiftool(ctx context.Context, input io.Reader, output *bytes
 	cmd := exec.CommandContext(ctx, s.exiftool, "-json", "-")
 	cmd.WaitDelay = exiftoolWaitDelay
 	cmd.Stdin = input
-	cmd.Stdout = output
-	cmd.Stderr = output
+	cmd.Stdout = stdout
+
+	var stderr bytes.Buffer
+
+	cmd.Stderr = &stderr
 
 	runErr := cmd.Run()
 	if runErr != nil && ctx.Err() != nil {
 		return fmt.Errorf("run exiftool: %w", ctx.Err())
 	}
 
-	return handleExifToolErr(runErr, output)
+	return handleExifToolErr(runErr, stdout, stderr.Bytes())
 }
 
-func handleExifToolErr(err error, buffer *bytes.Buffer) error {
+func handleExifToolErr(err error, stdout *bytes.Buffer, stderr []byte) error {
 	if err == nil {
 		return nil
 	}
 
 	var toolErrs exiftoolErrors
-	stderr := buffer.Bytes()
 
-	_ = json.Unmarshal(stderr, &toolErrs)
-
-	if len(toolErrs) > 0 && toolErrs[0].Error == "Unknown file type" {
-		buffer.Reset()
-		buffer.WriteString("[{}]")
+	if json.Unmarshal(stdout.Bytes(), &toolErrs) == nil && len(toolErrs) > 0 && toolErrs[0].Error == "Unknown file type" {
+		stdout.Reset()
+		stdout.WriteString("[{}]")
 
 		return nil
+	}
+
+	if len(stderr) == 0 {
+		stderr = stdout.Bytes()
 	}
 
 	return fmt.Errorf("extract exif `%s`: %w", stderr, err)

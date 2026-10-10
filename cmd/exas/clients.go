@@ -48,7 +48,7 @@ func newClients(ctx context.Context, config configuration) (clients, error) {
 }
 
 func (c clients) Start() {
-	go c.pprof.Start(c.health.DoneCtx())
+	c.pprof.Start(c.health.DoneCtx())
 }
 
 func (c clients) Close(ctx context.Context) {

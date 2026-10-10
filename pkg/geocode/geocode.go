@@ -29,7 +29,7 @@ const (
 	publicNominatimInterval = time.Second + time.Millisecond*200 // nominatim allows 1req/sec, so we take an extra step
 )
 
-var gpsRegex = regexp.MustCompile(`(?im)([0-9]+)\s*deg\s*([0-9]+)'\s*([0-9]+(?:\.[0-9]+)?)"\s*([NSWE])`)
+var gpsRegex = regexp.MustCompile(`(?i)([0-9]+)\s*deg\s*([0-9]+)'\s*([0-9]+(?:\.[0-9]+)?)"\s*([NSWE])`)
 
 type reverseGeocodeResponse struct {
 	Address map[string]string `json:"address"`
@@ -42,7 +42,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("exif").StringVar(fs, &config.GeocodeURL, "", overrides)
+	flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("geocode").StringVar(fs, &config.GeocodeURL, "", overrides)
 
 	return &config
 }
@@ -61,7 +61,7 @@ func New(config *Config, meterProvider metric.MeterProvider, tracerProvider trac
 	}
 
 	service := Service{
-		geocodeReq: request.New().Header("User-Agent", "fibr, reverse geocoding from exif data").Get(config.GeocodeURL),
+		geocodeReq: request.New().Header("User-Agent", "exas, reverse geocoding from exif data").Get(config.GeocodeURL),
 		ticker:     ticker,
 	}
 
@@ -104,18 +104,16 @@ func (s Service) GetGeocoding(ctx context.Context, exif model.Exif) (geocode mod
 		return geocode, fmt.Errorf("get gps coordinate: %w", err)
 	}
 
-	if !s.Enabled() {
+	if !s.Enabled() || !geocode.HasCoordinates() {
+		return geocode, nil
+	}
+
+	if err = s.waitForTurn(ctx); err != nil {
 		return geocode, err
 	}
 
-	if geocode.HasCoordinates() {
-		if s.ticker != nil {
-			<-s.ticker.C
-		}
-
-		if geocode, err = s.getReverseGeocode(ctx, geocode); err != nil {
-			return geocode, fmt.Errorf("reverse geocode: %w", err)
-		}
+	if geocode, err = s.getReverseGeocode(ctx, geocode); err != nil {
+		return geocode, fmt.Errorf("reverse geocode: %w", err)
 	}
 
 	if len(geocode.Address) == 0 {
@@ -126,6 +124,19 @@ func (s Service) GetGeocoding(ctx context.Context, exif model.Exif) (geocode mod
 	s.increaseMetric(ctx, "success")
 
 	return geocode, nil
+}
+
+func (s Service) waitForTurn(ctx context.Context) error {
+	if s.ticker == nil {
+		return nil
+	}
+
+	select {
+	case <-s.ticker.C:
+		return nil
+	case <-ctx.Done():
+		return fmt.Errorf("waiting for geocode rate limit: %w", ctx.Err())
+	}
 }
 
 func extractCoordinates(data map[string]any) (float64, float64, error) {
@@ -175,22 +186,22 @@ func convertDegreeMinuteSecondToDecimal(location string) (float64, error) {
 		return 0, fmt.Errorf("parse GPS data `%s`", location)
 	}
 
-	degrees, err := strconv.ParseFloat(match[1], 32)
+	degrees, err := strconv.ParseFloat(match[1], 64)
 	if err != nil {
 		return 0, fmt.Errorf("parse GPS degrees: %w", err)
 	}
 
-	minutes, err := strconv.ParseFloat(match[2], 32)
+	minutes, err := strconv.ParseFloat(match[2], 64)
 	if err != nil {
 		return 0, fmt.Errorf("parse GPS minutes: %w", err)
 	}
 
-	seconds, err := strconv.ParseFloat(match[3], 32)
+	seconds, err := strconv.ParseFloat(match[3], 64)
 	if err != nil {
 		return 0, fmt.Errorf("parse GPS seconds: %w", err)
 	}
 
-	direction := match[4]
+	direction := strings.ToUpper(match[4])
 
 	dd := degrees + minutes/60 + seconds/3600
 

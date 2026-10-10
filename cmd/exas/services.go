@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/ViBiOh/exas/pkg/exas"
 	"github.com/ViBiOh/exas/pkg/geocode"
@@ -26,7 +27,14 @@ func newServices(config configuration, clients clients, adapters adapters) (serv
 	output.geocode = geocode.New(config.geocode, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 	output.exas = exas.New(config.exas, output.geocode, clients.amqp, adapters.storage, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 
-	output.amqphandler, err = amqphandler.New(config.amqphandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), output.exas.AmqpHandler)
+	amqpClient := clients.amqp
+	if !adapters.storage.Enabled() && amqpClient != nil {
+		slog.LogAttrs(context.Background(), slog.LevelWarn, "no storage configured, amqp messages are not consumed")
+
+		amqpClient = nil
+	}
+
+	output.amqphandler, err = amqphandler.New(config.amqphandler, amqpClient, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), output.exas.AmqpHandler)
 	if err != nil {
 		return output, fmt.Errorf("amqphandler: %w", err)
 	}
@@ -35,7 +43,7 @@ func newServices(config configuration, clients clients, adapters adapters) (serv
 }
 
 func (s services) Start(ctx context.Context) {
-	go s.amqphandler.Start(ctx)
+	s.amqphandler.Start(ctx)
 }
 
 func (s services) Close() {

@@ -3,6 +3,9 @@ package exas
 import (
 	"bytes"
 	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -127,4 +131,105 @@ echo '[{}]'`)
 	for err := range errs {
 		assert.NoError(t, err)
 	}
+}
+
+func TestHandleExifToolErr(t *testing.T) {
+	t.Parallel()
+
+	runErr := errors.New("exit status 1")
+
+	cases := map[string]struct {
+		err        error
+		stdout     string
+		stderr     string
+		wantErr    string
+		wantStdout string
+	}{
+		"no error": {
+			stdout:     `[{"a":"b"}]`,
+			wantStdout: `[{"a":"b"}]`,
+		},
+		"unknown file type": {
+			err:        runErr,
+			stdout:     `[{"SourceFile":"-","Error":"Unknown file type"}]`,
+			wantStdout: "[{}]",
+		},
+		"other exiftool error": {
+			err:        runErr,
+			stdout:     `[{"SourceFile":"-","Error":"File is empty"}]`,
+			wantErr:    "File is empty",
+			wantStdout: `[{"SourceFile":"-","Error":"File is empty"}]`,
+		},
+		"stderr is preferred": {
+			err:        runErr,
+			stdout:     `not json`,
+			stderr:     "perl: broken",
+			wantErr:    "perl: broken",
+			wantStdout: `not json`,
+		},
+		"stdout is the fallback": {
+			err:        runErr,
+			stdout:     `not json`,
+			wantErr:    "not json",
+			wantStdout: `not json`,
+		},
+	}
+
+	for intention, testCase := range cases {
+		t.Run(intention, func(t *testing.T) {
+			t.Parallel()
+
+			stdout := bytes.NewBufferString(testCase.stdout)
+
+			err := handleExifToolErr(testCase.err, stdout, []byte(testCase.stderr))
+
+			if testCase.wantErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, runErr)
+				assert.ErrorContains(t, err, testCase.wantErr)
+			}
+
+			assert.Equal(t, testCase.wantStdout, stdout.String())
+		})
+	}
+}
+
+func TestGetGeocodeFailure(t *testing.T) {
+	t.Parallel()
+
+	script := writeScript(t, "gps", `cat >/dev/null
+echo '[{"GPSLatitude":"48 deg 51'"'"' 30\" N","GPSLongitude":"2 deg 21'"'"' 7\" E"}]'`)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	geocoder := geocode.New(&geocode.Config{GeocodeURL: server.URL}, nil, nil)
+	t.Cleanup(geocoder.Close)
+
+	service := New(&Config{Exiftool: script, MaxProcess: 1}, geocoder, nil, nil, nil, nil)
+
+	t.Run("keeps exif and coordinates", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := service.get(context.Background(), strings.NewReader("input"))
+
+		require.NoError(t, err)
+		assert.True(t, got.HasData())
+		assert.True(t, got.Geocode.HasCoordinates())
+		assert.False(t, got.Geocode.HasAddress())
+	})
+
+	t.Run("fails when cancelled", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		_, err := service.get(ctx, strings.NewReader("input"))
+
+		require.ErrorIs(t, err, context.Canceled)
+	})
 }

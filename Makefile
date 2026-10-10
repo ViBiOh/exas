@@ -58,8 +58,8 @@ init:
 ## format: Format code. e.g Prettier (js), format (golang)
 .PHONY: format
 format:
-	find . -name "*.go" -exec go tool "golang.org/x/tools/cmd/goimports" -w {} \+
-	find . -name "*.go" -exec go tool "mvdan.cc/gofumpt" -extra -w {} \+
+	find cmd pkg -name "*.go" -exec go tool "golang.org/x/tools/cmd/goimports" -w {} \+
+	find cmd pkg -name "*.go" -exec go tool "mvdan.cc/gofumpt" -extra -w {} \+
 
 ## style: Check lint, code styling rules. e.g. pylint, phpcs, eslint, style (java) etc ...
 .PHONY: style

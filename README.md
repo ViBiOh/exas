@@ -10,6 +10,7 @@ The HTTP API is pretty simple :
 - `GET /ready`: checks external dependencies availability and then respond [`okStatus (default 204)`](#usage) or `503` during [`graceDuration`](#usage) when close signal is received
 - `GET /version`: value of `VERSION` environment variable
 - `POST /`: extract Exif of the image passed in payload in binary
+- `GET /<path>`: extract Exif of the file at `<path>` in the configured storage. Responds `404` when the file does not exist and `405` when no storage is configured. The endpoint is not authenticated, expose it only on a trusted network.
 
 ### Installation
 
@@ -39,7 +40,8 @@ Usage of exas:
   --amqpURI                     string    [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> ${EXAS_AMQP_URI}
   --cert                        string    [server] Certificate file ${EXAS_CERT}
   --exchange                    string    [exas] AMQP Exchange Name ${EXAS_EXCHANGE} (default "fibr")
-  --geocodeURL                  string    [exif] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") ${EXAS_GEOCODE_URL}
+  --exiftool                    string    [exas] Path to the exiftool executable ${EXAS_EXIFTOOL} (default "./exiftool")
+  --geocodeURL                  string    [geocode] Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. "https://nominatim.openstreetmap.org") ${EXAS_GEOCODE_URL}
   --graceDuration               duration  [http] Grace duration when signal received ${EXAS_GRACE_DURATION} (default 30s)
   --idleTimeout                 duration  [server] Idle Timeout ${EXAS_IDLE_TIMEOUT} (default 2m0s)
   --key                         string    [server] Key file ${EXAS_KEY}
