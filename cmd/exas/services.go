@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/exas/pkg/exas"
 	"github.com/ViBiOh/exas/pkg/geocode"
 	"github.com/ViBiOh/httputils/v4/pkg/amqphandler"
@@ -28,7 +30,7 @@ func newServices(config configuration, clients clients, adapters adapters) (serv
 	output.exas = exas.New(config.exas, output.geocode, clients.amqp, adapters.storage, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 
 	amqpClient := clients.amqp
-	if !adapters.storage.Enabled() && amqpClient != nil {
+	if _, err := adapters.storage.List(context.Background(), "/"); errors.Is(err, absto.ErrNotEnabled) && amqpClient != nil {
 		slog.LogAttrs(context.Background(), slog.LevelWarn, "no storage configured, amqp messages are not consumed")
 
 		amqpClient = nil

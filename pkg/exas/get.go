@@ -1,6 +1,7 @@
 package exas
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,17 +11,17 @@ import (
 )
 
 func (s Service) HandleGet(w http.ResponseWriter, r *http.Request) {
-	if !s.storage.Enabled() {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	ctx := r.Context()
 
 	reader, err := s.storage.ReadFrom(ctx, r.URL.Path)
 	if err != nil {
 		if absto.IsNotExist(err) {
 			httperror.NotFound(ctx, w, nil)
+			return
+		}
+
+		if errors.Is(err, absto.ErrNotEnabled) {
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
