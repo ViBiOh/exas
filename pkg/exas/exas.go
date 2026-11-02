@@ -62,10 +62,10 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
-	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.AmqpRoutingKey, "exif_output", overrides)
-	flags.New("Exiftool", "Path to the exiftool executable").Prefix(prefix).DocPrefix("exas").StringVar(fs, &config.Exiftool, defaultExiftool, overrides)
-	flags.New("MaxProcess", "Maximum number of concurrent exiftool processes").Prefix(prefix).DocPrefix("exas").IntVar(fs, &config.MaxProcess, runtime.GOMAXPROCS(0), overrides)
+	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("exas").FlagVar(fs, &config.AmqpExchange, "fibr", overrides)
+	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("exas").FlagVar(fs, &config.AmqpRoutingKey, "exif_output", overrides)
+	flags.New("Exiftool", "Path to the exiftool executable").Prefix(prefix).DocPrefix("exas").FlagVar(fs, &config.Exiftool, defaultExiftool, overrides)
+	flags.New("MaxProcess", "Maximum number of concurrent exiftool processes").Prefix(prefix).DocPrefix("exas").FlagVar(fs, &config.MaxProcess, runtime.GOMAXPROCS(0), overrides)
 
 	return &config
 }

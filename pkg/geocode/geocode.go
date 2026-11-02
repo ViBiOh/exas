@@ -42,7 +42,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("geocode").StringVar(fs, &config.GeocodeURL, "", overrides)
+	flags.New("GeocodeURL", fmt.Sprintf("Nominatim Geocode Service URL. This can leak GPS metadatas to a third-party (e.g. \"%s\")", publicNominatimURL)).Prefix(prefix).DocPrefix("geocode").FlagVar(fs, &config.GeocodeURL, "", overrides)
 
 	return &config
 }
