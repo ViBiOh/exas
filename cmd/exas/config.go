@@ -39,14 +39,12 @@ func newConfig() configuration {
 	fs.Usage = flags.Usage(fs)
 
 	config := configuration{
-		logger:    logger.Flags(fs, "logger"),
-		alcotest:  alcotest.Flags(fs, ""),
-		telemetry: telemetry.Flags(fs, "telemetry"),
-		pprof:     pprof.Flags(fs, "pprof"),
-		health:    health.Flags(fs, ""),
-
-		server: server.Flags(fs, "", flags.NewOverride("ReadTimeout", 2*time.Minute), flags.NewOverride("WriteTimeout", 2*time.Minute)),
-
+		logger:      logger.Flags(fs, "logger"),
+		alcotest:    alcotest.Flags(fs, ""),
+		telemetry:   telemetry.Flags(fs, "telemetry"),
+		pprof:       pprof.Flags(fs, "pprof"),
+		health:      health.Flags(fs, ""),
+		server:      server.Flags(fs, "server", flags.NewOverride("ReadTimeout", 2*time.Minute), flags.NewOverride("WriteTimeout", 2*time.Minute)),
 		exas:        exas.Flags(fs, ""),
 		absto:       absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", "")),
 		geocode:     geocode.Flags(fs, ""),
