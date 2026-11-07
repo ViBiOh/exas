@@ -3,7 +3,7 @@ package exas
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"flag"
 	"fmt"
 	"io"
@@ -113,7 +113,7 @@ func (s Service) get(ctx context.Context, input io.Reader) (exif model.Exif, err
 	}
 
 	var exifs []map[string]any
-	if err := json.NewDecoder(buffer).Decode(&exifs); err != nil {
+	if err := json.UnmarshalRead(buffer, &exifs); err != nil {
 		return exif, fmt.Errorf("decode exiftool output: %w", err)
 	}
 

@@ -2,7 +2,7 @@ package exas
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -177,7 +177,7 @@ exit 2`)
 
 			var got model.Exif
 
-			require.NoError(t, json.NewDecoder(writer.Body).Decode(&got))
+			require.NoError(t, json.UnmarshalRead(writer.Body, &got))
 
 			if testCase.wantFileTyp != "" {
 				assert.Equal(t, testCase.wantFileTyp, got.Data["FileType"])
