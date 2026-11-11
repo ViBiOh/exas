@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/ViBiOh/absto v1.8.2
 	github.com/ViBiOh/flags v1.7.0
-	github.com/ViBiOh/httputils/v4 v4.90.3
+	github.com/ViBiOh/httputils/v4 v4.90.4
 	github.com/rabbitmq/amqp091-go v1.16.0
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel v1.47.0
@@ -47,7 +47,7 @@ require (
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/telemetry v0.0.0-20261021172232-6cd571d43fbb // indirect
 	golang.org/x/term v0.47.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
